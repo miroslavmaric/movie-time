@@ -1,10 +1,12 @@
 package com.nightsparrow.movietime;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -44,6 +46,16 @@ public class MainActivityFragment extends Fragment {
 
         ListView listview = (ListView) root.findViewById(R.id.listview_movie);
         listview.setAdapter(mMovieAdapter);
+
+        listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String movie = mMovieAdapter.getItem(position);
+                Intent intent = new Intent(getActivity(), DetailActivity.class);
+                intent.putExtra(Intent.EXTRA_TEXT, movie);
+                startActivity(intent);
+            }
+        });
 
         return root;
     }
