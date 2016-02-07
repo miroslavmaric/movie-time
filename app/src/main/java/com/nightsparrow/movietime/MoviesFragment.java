@@ -1,6 +1,7 @@
 package com.nightsparrow.movietime;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -112,11 +113,21 @@ public class MoviesFragment extends Fragment {
             // Will contain the raw JSON response as a string.
             String moviesJsonStr = null;
 
+            String sort = "popularity.desc";
+
             try {
-                String baseUri = "https://api.themoviedb.org/3/movie/550";
-                String apiKey = "?api_key=" + BuildConfig.THE_MOVIE_DB_API_KEY;
-                URL url = new URL(baseUri + apiKey);
-                Log.v(LOG_TAG, "URL: " + url);
+                final String MOVIES_BASE_URL = "https://api.themoviedb.org/3/discover/movie";
+                final String SORT_BY_PARAM = "sort_by";
+                final String API_PARAM = "api_key";
+
+                Uri builtUri = Uri.parse(MOVIES_BASE_URL).buildUpon()
+                        .appendQueryParameter(SORT_BY_PARAM, sort)
+                        .appendQueryParameter(API_PARAM, BuildConfig.THE_MOVIE_DB_API_KEY)
+                        .build();
+
+                URL url = new URL(builtUri.toString());
+
+                Log.v(LOG_TAG, " " + url );
 
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
