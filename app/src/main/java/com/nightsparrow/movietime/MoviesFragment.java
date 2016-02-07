@@ -16,6 +16,10 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +36,7 @@ public class MoviesFragment extends Fragment {
 
     private final String LOG_TAG =  MoviesFragment.class.getSimpleName();
 
-    public ArrayAdapter<String> mMovieAdapter;
+    public ArrayAdapter<String> mMoviesAdapter;
 
     public MoviesFragment() {
     }
@@ -77,7 +81,7 @@ public class MoviesFragment extends Fragment {
 
         ArrayList<String> dataList = new ArrayList<>(Arrays.asList(data));
 
-        mMovieAdapter = new ArrayAdapter<String>(
+        mMoviesAdapter = new ArrayAdapter<String>(
                 getActivity(),
                 R.layout.list_item_movie,
                 R.id.list_item_movie_textview,
@@ -85,12 +89,12 @@ public class MoviesFragment extends Fragment {
         );
 
         ListView listview = (ListView) rootView.findViewById(R.id.listview_movie);
-        listview.setAdapter(mMovieAdapter);
+        listview.setAdapter(mMoviesAdapter);
 
         listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String movie = mMovieAdapter.getItem(position);
+                String movie = mMoviesAdapter.getItem(position);
                 Intent intent = new Intent(getActivity(), DetailActivity.class);
                 intent.putExtra(Intent.EXTRA_TEXT, movie);
                 startActivity(intent);
@@ -100,11 +104,11 @@ public class MoviesFragment extends Fragment {
         return rootView;
     }
 
-    public class FetchMoviesTask extends AsyncTask<Void, Void, Void> {
+    public class FetchMoviesTask extends AsyncTask<Void, Void, String[]> {
         private final String LOG_TAG = FetchMoviesTask.class.getSimpleName();
 
         @Override
-        protected Void doInBackground(Void... params) {
+        protected String[] doInBackground(Void... params) {
             // Clear these two outside the try/catch
             // so that they can be closed in the finally block.
             HttpURLConnection urlConnection = null;
@@ -114,14 +118,17 @@ public class MoviesFragment extends Fragment {
             String moviesJsonStr = null;
 
             String sort = "popularity.desc";
+            String page = "1";
 
             try {
                 final String MOVIES_BASE_URL = "https://api.themoviedb.org/3/discover/movie";
                 final String SORT_BY_PARAM = "sort_by";
                 final String API_PARAM = "api_key";
+                final String PAGE_PARAM = "page";
 
                 Uri builtUri = Uri.parse(MOVIES_BASE_URL).buildUpon()
                         .appendQueryParameter(SORT_BY_PARAM, sort)
+                        .appendQueryParameter(PAGE_PARAM, page)
                         .appendQueryParameter(API_PARAM, BuildConfig.THE_MOVIE_DB_API_KEY)
                         .build();
 
@@ -161,14 +168,15 @@ public class MoviesFragment extends Fragment {
 
             } catch (IOException e) {
                 Log.e(LOG_TAG, "IO Error: " + e);
+                // If the code didn't successfully get the movie data, there's no point in
+                // attempting to parse it.
+                return null;
             } catch (Exception e) {
                 Log.e(LOG_TAG, "Error: " + e);
+                return null;
             } finally {
                 if (null != urlConnection) {
                     urlConnection.disconnect();
-                    // If the code didn't successfully get the movie data, there's no point in
-                    // attempting to parse it.
-                    return null;
                 }
                 if (null != reader) {
                     try {
@@ -179,7 +187,55 @@ public class MoviesFragment extends Fragment {
                 }
             }
 
+            try {
+                return getMoviesDataFromJson(moviesJsonStr);
+            } catch (JSONException e) {
+                Log.e(LOG_TAG, e.getMessage(), e);
+                e.printStackTrace();
+            }
+
             return null;
+        }
+
+        private String[] getMoviesDataFromJson(String moviesJsonString) throws JSONException {
+
+            // Names of the JSON objects that need to be extracted.
+            final String TMDB_RESULTS = "results";
+            final String TMDB_ORIGINAL_TITLE = "original_title";
+            final String TMDB_TITLE = "title";  // localization ...
+            final String TMDB_OVERVIEW = "overview";
+            final String TMDB_RELEASE_DATE = "release_date";    // yyyy-mm-dd
+            final String TMDB_POPULARITY = "popularity";
+            final String TMDB_VOTE_COUNT = "vote_average";
+            final String TMDB_VOTE_AVERAGE = "vote_average";
+
+            // TODO: Will be needed after UI upgrade
+            // final String TMDB_POSTER_PATH = "poster_path";
+
+            JSONObject moviesJson = new JSONObject(moviesJsonString);
+            JSONArray moviesArray = moviesJson.getJSONArray(TMDB_RESULTS);
+
+
+            String[] resultStrs = new String[moviesArray.length()];
+            for(int i = 0; i < moviesArray.length(); i++) {
+
+                // Get the JSON object representing the movie
+                JSONObject movie = moviesArray.getJSONObject(i);
+
+                String title = movie.getString(TMDB_TITLE);
+                String releaseDate = movie.getString(TMDB_RELEASE_DATE);
+                String popularity = movie.getString(TMDB_POPULARITY);
+
+                // TODO: Refactor this to return additional attributes whn the
+                // data provider is implemented
+                resultStrs[i] = title + " - " + releaseDate + " - " + popularity;
+            }
+
+            for (String s : resultStrs) {
+                Log.v(LOG_TAG, "Movie entry: " + s);
+            }
+
+            return resultStrs;
         }
     }
 }
