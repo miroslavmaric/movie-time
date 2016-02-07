@@ -197,6 +197,16 @@ public class MoviesFragment extends Fragment {
             return null;
         }
 
+        @Override
+        protected void onPostExecute(String[] result) {
+            if (result != null) {
+                mMoviesAdapter.clear();
+                for (String movieStr : result) {
+                    mMoviesAdapter.add(movieStr);
+                }
+            }
+        }
+
         private String[] getMoviesDataFromJson(String moviesJsonString) throws JSONException {
 
             // Names of the JSON objects that need to be extracted.
