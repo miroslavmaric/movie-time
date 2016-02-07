@@ -1,9 +1,11 @@
 package com.nightsparrow.movietime;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -60,11 +62,15 @@ public class MoviesFragment extends Fragment {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_refresh) {
-            FetchMoviesTask weatherTask = new FetchMoviesTask();
-            weatherTask.execute();
+            updateMovies();
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void updateMovies() {
+        FetchMoviesTask weatherTask = new FetchMoviesTask();
+        weatherTask.execute();
     }
 
     @Override
@@ -104,6 +110,12 @@ public class MoviesFragment extends Fragment {
         return rootView;
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        updateMovies();
+    }
+
     public class FetchMoviesTask extends AsyncTask<Void, Void, String[]> {
         private final String LOG_TAG = FetchMoviesTask.class.getSimpleName();
 
@@ -117,7 +129,11 @@ public class MoviesFragment extends Fragment {
             // Will contain the raw JSON response as a string.
             String moviesJsonStr = null;
 
-            String sort = "popularity.desc";
+            // Get the sort by option from the preferences
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String sort = prefs.getString(getString(R.string.pref_sort_key),
+                    getString(R.string.pref_sort_popularity));
+
             String page = "1";
 
             try {
@@ -235,10 +251,11 @@ public class MoviesFragment extends Fragment {
                 String title = movie.getString(TMDB_TITLE);
                 String releaseDate = movie.getString(TMDB_RELEASE_DATE);
                 String popularity = movie.getString(TMDB_POPULARITY);
+                String vote_average = movie.getString(TMDB_VOTE_AVERAGE);
 
                 // TODO: Refactor this to return additional attributes whn the
                 // data provider is implemented
-                resultStrs[i] = title + " - " + releaseDate + " - " + popularity;
+                resultStrs[i] = title + " - " + releaseDate + " - " + vote_average;
             }
 
             for (String s : resultStrs) {

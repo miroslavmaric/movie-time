@@ -20,9 +20,9 @@
     <string name="pref_sort_key" translatable="false">sort</string>
 
     <!-- Value for popularity sort option -->
-    <string name="pref_sort_popularity">popularity</string>
+    <string name="pref_sort_popularity">popularity.desc</string>
 
     <!-- Value for rating sort option -->
-    <string name="pref_sort_rating">rating</string>
+    <string name="pref_sort_rating">vote_average.desc</string>
 
 </resources>
