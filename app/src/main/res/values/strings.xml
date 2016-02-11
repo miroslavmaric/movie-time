@@ -25,4 +25,7 @@
     <!-- Value for rating sort option -->
     <string name="pref_sort_rating">vote_average.desc</string>
 
+
+    <string name="content_authority">com.nightsparrow.movietime</string>
+
 </resources>
