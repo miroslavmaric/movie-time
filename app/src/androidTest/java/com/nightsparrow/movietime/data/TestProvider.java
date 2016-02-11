@@ -1,8 +1,11 @@
 package com.nightsparrow.movietime.data;
 
 import android.content.ComponentName;
+import android.content.ContentValues;
 import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.test.AndroidTestCase;
 
 import com.nightsparrow.movietime.data.MovieContract.MovieEntry;
@@ -43,6 +46,30 @@ public class TestProvider extends AndroidTestCase {
         // vnd.android.cursor.dir/com.nightsparrow.movietimep/movie/
         assertEquals("Error: the MovieEntry CONTENT_URI should return MovieEntry.CONTENT_TYPE",
                 MovieEntry.CONTENT_TYPE, type);
+    }
+
+    public void testBasicMovieQuery() {
+        // insert our test records into the database
+        MovieDbHelper dbHelper = new MovieDbHelper(mContext);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        ContentValues movieValues = TestDb.createImaginaryMovieValues();
+        long movieRowId = db.insert(MovieEntry.TABLE_NAME, null, movieValues);
+        assertTrue("Unable to Insert MovieEntry into the Database", movieRowId != -1);
+
+        db.close();
+
+        // Test the basic content provider query
+        Cursor movieCursor = mContext.getContentResolver().query(
+                MovieEntry.CONTENT_URI,
+                null,
+                null,
+                null,
+                null
+        );
+
+        // Make sure we get the correct cursor out of the database
+        TestDb.validateCursor("testBasicWeatherQuery", movieCursor, movieValues);
     }
 
 }

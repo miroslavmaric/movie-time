@@ -123,6 +123,12 @@ public class TestDb extends AndroidTestCase {
         }
     }
 
+    static void validateCursor(String error, Cursor valueCursor, ContentValues expectedValues) {
+        assertTrue("Empty cursor returned. " + error, valueCursor.moveToFirst());
+        validateCurrentRecord(error, valueCursor, expectedValues);
+        valueCursor.close();
+    }
+
     static long insertImaginaryMovieValues(Context context) {
         // insert our test records into the database
         MovieDbHelper dbHelper = new MovieDbHelper(context);
