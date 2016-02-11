@@ -232,11 +232,11 @@ public class MoviesFragment extends Fragment {
             final String TMDB_OVERVIEW = "overview";
             final String TMDB_RELEASE_DATE = "release_date";    // yyyy-mm-dd
             final String TMDB_POPULARITY = "popularity";
-            final String TMDB_VOTE_COUNT = "vote_average";
+            final String TMDB_VOTE_COUNT = "vote_count";
             final String TMDB_VOTE_AVERAGE = "vote_average";
 
             // TODO: Will be needed after UI upgrade
-            // final String TMDB_POSTER_PATH = "poster_path";
+            final String TMDB_POSTER_PATH = "poster_path";
 
             JSONObject moviesJson = new JSONObject(moviesJsonString);
             JSONArray moviesArray = moviesJson.getJSONArray(TMDB_RESULTS);
