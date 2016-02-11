@@ -5,6 +5,8 @@ import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
 import android.test.AndroidTestCase;
 
+import com.nightsparrow.movietime.data.MovieContract.MovieEntry;
+
 /**
  * Created by Miroslav Maric on 2/11/2016.
  */
@@ -33,6 +35,14 @@ public class TestProvider extends AndroidTestCase {
             assertTrue("Error: MovieProvider not registered at " + mContext.getPackageName(),
                     false);
         }
+    }
+
+    public void testGetType() {
+        // content://com.nightsparrow.movietimep/movie/
+        String type = mContext.getContentResolver().getType(MovieContract.MovieEntry.CONTENT_URI);
+        // vnd.android.cursor.dir/com.nightsparrow.movietimep/movie/
+        assertEquals("Error: the MovieEntry CONTENT_URI should return MovieEntry.CONTENT_TYPE",
+                MovieEntry.CONTENT_TYPE, type);
     }
 
 }
