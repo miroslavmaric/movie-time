@@ -53,7 +53,7 @@ public class TestProvider extends AndroidTestCase {
         MovieDbHelper dbHelper = new MovieDbHelper(mContext);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
-        ContentValues movieValues = TestDb.createImaginaryMovieValues();
+        ContentValues movieValues = TestUtilities.createImaginaryMovieValues();
         long movieRowId = db.insert(MovieEntry.TABLE_NAME, null, movieValues);
         assertTrue("Unable to Insert MovieEntry into the Database", movieRowId != -1);
 
@@ -69,7 +69,7 @@ public class TestProvider extends AndroidTestCase {
         );
 
         // Make sure we get the correct cursor out of the database
-        TestDb.validateCursor("testBasicWeatherQuery", movieCursor, movieValues);
+        TestUtilities.validateCursor("testBasicWeatherQuery", movieCursor, movieValues);
     }
 
 }
