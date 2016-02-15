@@ -5,12 +5,10 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.widget.ArrayAdapter;
 
 import com.nightsparrow.movietime.data.MovieContract;
 import com.nightsparrow.movietime.data.MovieContract.MovieEntry;
@@ -30,15 +28,13 @@ import java.util.Vector;
 /**
  * Created by Miroslav Maric on 2/11/2016.
  */
-public class FetchMoviesTask extends AsyncTask<Void, Void, String[]> {
+public class FetchMoviesTask extends AsyncTask<Void, Void, Void> {
     private final String LOG_TAG = FetchMoviesTask.class.getSimpleName();
 
-    private ArrayAdapter<String> mMoviesAdapter;
     private final Context mContext;
 
-    public FetchMoviesTask(Context context, ArrayAdapter<String> moviesAdapter) {
+    public FetchMoviesTask(Context context) {
         mContext = context;
-        mMoviesAdapter = moviesAdapter;
     }
 
     /**
@@ -98,7 +94,7 @@ public class FetchMoviesTask extends AsyncTask<Void, Void, String[]> {
     }
 
     @Override
-    protected String[] doInBackground(Void... params) {
+    protected Void doInBackground(Void... params) {
         // Clear these two outside the try/catch
         // so that they can be closed in the finally block.
         HttpURLConnection urlConnection = null;
@@ -158,6 +154,8 @@ public class FetchMoviesTask extends AsyncTask<Void, Void, String[]> {
             }
 
             moviesJsonStr = buffer.toString();
+            getMoviesDataFromJson(moviesJsonStr);
+
             Log.v(LOG_TAG, "Data: " + moviesJsonStr);
 
         } catch (IOException e) {
@@ -165,9 +163,9 @@ public class FetchMoviesTask extends AsyncTask<Void, Void, String[]> {
             // If the code didn't successfully get the movie data, there's no point in
             // attempting to parse it.
             return null;
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "Unexpected Error: " + e);
-            return null;
+        } catch (JSONException  e) {
+            Log.e(LOG_TAG, e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             if (null != urlConnection) {
                 urlConnection.disconnect();
@@ -181,27 +179,10 @@ public class FetchMoviesTask extends AsyncTask<Void, Void, String[]> {
             }
         }
 
-        try {
-            return getMoviesDataFromJson(moviesJsonStr);
-        } catch (JSONException e) {
-            Log.e(LOG_TAG, e.getMessage(), e);
-            e.printStackTrace();
-        }
-
         return null;
     }
 
-    @Override
-    protected void onPostExecute(String[] result) {
-        if (result != null) {
-            mMoviesAdapter.clear();
-            for (String movieStr : result) {
-                mMoviesAdapter.add(movieStr);
-            }
-        }
-    }
-
-    private String[] getMoviesDataFromJson(String moviesJsonString) throws JSONException {
+    private void getMoviesDataFromJson(String moviesJsonString) throws JSONException {
 
         // Names of the JSON objects that need to be extracted.
         final String TMDB_RESULTS = "results";
@@ -263,65 +244,20 @@ public class FetchMoviesTask extends AsyncTask<Void, Void, String[]> {
                 cVVector.add(movieValues);
             }
 
+            int inserted = 0;
             // add to database
             if (cVVector.size() > 0) {
                 ContentValues[] cvArray = new ContentValues[cVVector.size()];
                 cVVector.toArray(cvArray);
-                mContext.getContentResolver().bulkInsert(MovieEntry.CONTENT_URI, cvArray);
+                inserted = mContext.getContentResolver().bulkInsert(MovieEntry.CONTENT_URI, cvArray);
             }
 
-            // Sort order:  Get sort order from preferences
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-            String sort = prefs.getString(mContext.getString(R.string.pref_sort_key),
-                    mContext.getString(R.string.pref_sort_popularity));
-
-            String sortOrder;
-            if(sort.equals(mContext.getString(R.string.pref_sort_popularity))) {
-                sortOrder = MovieEntry.COLUMN_POPULARITY + " DESC";
-            } else {
-                sortOrder = MovieEntry.COLUMN_VOTE_AVERAGE + " DESC";
-            }
-
-            Uri movieUri = MovieEntry.CONTENT_URI;
-
-            // Display what what was stored in the bulkInsert
-            /////////////////////
-            Cursor cur = mContext.getContentResolver().query(movieUri,
-                    null, null, null, sortOrder);
-
-            cVVector = new Vector<ContentValues>(cur.getCount());
-            if (cur.moveToFirst()) {
-                do {
-                    ContentValues cv = new ContentValues();
-                    DatabaseUtils.cursorRowToContentValues(cur, cv);
-                    cVVector.add(cv);
-                } while (cur.moveToNext());
-            }
-            cur.close();
-            /////////////////////
-
-            Log.d(LOG_TAG, "FetchMoviesTask Complete. " + cVVector.size() + " Inserted");
-
-            String[] resultStrs = convertContentValuesToUXFormat(cVVector);
-            return resultStrs;
+            Log.d(LOG_TAG, "FetchMoviesTask Complete. " + inserted + " Inserted");
 
         } catch (JSONException e) {
             Log.e(LOG_TAG, e.getMessage(), e);
             e.printStackTrace();
         }
 
-        return null;
-    }
-
-    String[] convertContentValuesToUXFormat(Vector<ContentValues> cvv) {
-        // return strings to keep UI functional for now
-        String[] resultStrs = new String[cvv.size()];
-        for ( int i = 0; i < cvv.size(); i++ ) {
-            ContentValues movieValues = cvv.elementAt(i);
-            resultStrs[i] = movieValues.getAsString(MovieEntry.COLUMN_TITLE) +
-                    " - " + movieValues.getAsDouble(MovieEntry.COLUMN_POPULARITY) +
-                    " - " + movieValues.getAsDouble(MovieEntry.COLUMN_VOTE_AVERAGE);
-        }
-        return resultStrs;
     }
 }

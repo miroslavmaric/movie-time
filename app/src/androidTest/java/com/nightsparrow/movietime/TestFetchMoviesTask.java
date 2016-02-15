@@ -34,7 +34,7 @@ public class TestFetchMoviesTask extends AndroidTestCase {
                 MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
                 new String[]{String.valueOf(ADD_MOVIE_ID)});
 
-        FetchMoviesTask fmt = new FetchMoviesTask(getContext(), null);
+        FetchMoviesTask fmt = new FetchMoviesTask(getContext());
         long movieRowId = fmt.addMovie(
                 ADD_MOVIE_ID,
                 ADD_TITLE,

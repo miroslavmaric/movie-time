@@ -1,7 +1,10 @@
 package com.nightsparrow.movietime;
 
-import android.content.Intent;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -9,12 +12,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import com.nightsparrow.movietime.data.MovieContract;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -23,7 +23,7 @@ public class MoviesFragment extends Fragment {
 
     private final String LOG_TAG =  MoviesFragment.class.getSimpleName();
 
-    public ArrayAdapter<String> mMoviesAdapter;
+    private MoviesAdapter mMoviesAdapter;
 
     public MoviesFragment() {
     }
@@ -54,43 +54,35 @@ public class MoviesFragment extends Fragment {
     }
 
     private void updateMovies() {
-        FetchMoviesTask movieTask = new FetchMoviesTask(getActivity(), mMoviesAdapter);
+        FetchMoviesTask movieTask = new FetchMoviesTask(getActivity());
         movieTask.execute();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        // Sort order:  Get sort order from preferences
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String sort = prefs.getString(getActivity().getString(R.string.pref_sort_key),
+                getActivity().getString(R.string.pref_sort_popularity));
+
+        String sortOrder;
+        if(sort.equals(getActivity().getString(R.string.pref_sort_popularity))) {
+            sortOrder = MovieContract.MovieEntry.COLUMN_POPULARITY + " DESC";
+        } else {
+            sortOrder = MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE + " DESC";
+        }
+
+        Uri movieUri = MovieContract.MovieEntry.CONTENT_URI;
+
+        Cursor cur = getActivity().getContentResolver().query(movieUri,
+                null, null, null, sortOrder);
+
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-
-        String[] data = {
-                "Tommorow - 60",
-                "Wasteland - 210",
-                "Nimmerland - 120",
-                "Drake LAke - 140"
-        };
-
-        ArrayList<String> dataList = new ArrayList<>(Arrays.asList(data));
-
-        mMoviesAdapter = new ArrayAdapter<String>(
-                getActivity(),
-                R.layout.list_item_movie,
-                R.id.list_item_movie_textview,
-                dataList
-        );
 
         ListView listview = (ListView) rootView.findViewById(R.id.listview_movie);
         listview.setAdapter(mMoviesAdapter);
-
-        listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String movie = mMoviesAdapter.getItem(position);
-                Intent intent = new Intent(getActivity(), DetailActivity.class);
-                intent.putExtra(Intent.EXTRA_TEXT, movie);
-                startActivity(intent);
-            }
-        });
 
         return rootView;
     }
