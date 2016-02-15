@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
@@ -12,6 +13,7 @@ import android.util.Log;
 import android.widget.ArrayAdapter;
 
 import com.nightsparrow.movietime.data.MovieContract;
+import com.nightsparrow.movietime.data.MovieContract.MovieEntry;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -23,6 +25,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Vector;
 
 /**
  * Created by Miroslav Maric on 2/11/2016.
@@ -202,41 +205,123 @@ public class FetchMoviesTask extends AsyncTask<Void, Void, String[]> {
 
         // Names of the JSON objects that need to be extracted.
         final String TMDB_RESULTS = "results";
-        final String TMDB_ORIGINAL_TITLE = "original_title";
+
+        final String TMDB_ID = "id";
         final String TMDB_TITLE = "title";  // localization ...
+        final String TMDB_ORIGINAL_TITLE = "original_title";
+        final String TMBD_ORIGINAL_LANGUAGE = "original_language";
         final String TMDB_OVERVIEW = "overview";
         final String TMDB_RELEASE_DATE = "release_date";    // yyyy-mm-dd
         final String TMDB_POPULARITY = "popularity";
         final String TMDB_VOTE_COUNT = "vote_count";
         final String TMDB_VOTE_AVERAGE = "vote_average";
-
-        // TODO: Will be needed after UI upgrade
         final String TMDB_POSTER_PATH = "poster_path";
+        final String TMBS_ADULT = "adult";
+        final String TMBD_VIDEO = "video";
 
-        JSONObject moviesJson = new JSONObject(moviesJsonString);
-        JSONArray moviesArray = moviesJson.getJSONArray(TMDB_RESULTS);
+        try {
+            JSONObject moviesJson = new JSONObject(moviesJsonString);
+            JSONArray moviesArray = moviesJson.getJSONArray(TMDB_RESULTS);
+
+            // Insert the new movie information into the database
+            Vector<ContentValues> cVVector = new Vector<ContentValues>(moviesArray.length());
+
+            for (int i = 0; i < moviesArray.length(); i++) {
+
+                // Get the JSON object representing the movie
+                JSONObject movie = moviesArray.getJSONObject(i);
+
+                long movieId = movie.getLong(TMDB_ID);
+                String title = movie.getString(TMDB_TITLE);
+                String originalTitle = movie.getString(TMDB_ORIGINAL_TITLE);
+                String originalLanguage = movie.getString(TMBD_ORIGINAL_LANGUAGE);
+                String overview = movie.getString(TMDB_OVERVIEW);
+                String releaseDate = movie.getString(TMDB_RELEASE_DATE);
+                double popularity = movie.getDouble(TMDB_POPULARITY);
+                long voteCount = movie.getLong(TMDB_VOTE_COUNT);
+                double voteAverage = movie.getDouble(TMDB_VOTE_AVERAGE);
+                String posterPath = movie.getString(TMDB_POSTER_PATH);
+                boolean adult = movie.getBoolean(TMBS_ADULT);
+                boolean video = movie.getBoolean(TMBD_VIDEO);
 
 
-        String[] resultStrs = new String[moviesArray.length()];
-        for(int i = 0; i < moviesArray.length(); i++) {
+                ContentValues movieValues = new ContentValues();
 
-            // Get the JSON object representing the movie
-            JSONObject movie = moviesArray.getJSONObject(i);
+                movieValues.put(MovieEntry.COLUMN_MOVIE_ID, movieId);
+                movieValues.put(MovieEntry.COLUMN_TITLE, title);
+                movieValues.put(MovieEntry.COLUMN_ORIGINAL_TITLE, originalTitle);
+                movieValues.put(MovieEntry.COLUMN_ORIGINAL_LANGUAGE, originalLanguage);
+                movieValues.put(MovieEntry.COLUMN_OVERVIEW, overview);
+                movieValues.put(MovieEntry.COLUMN_RELEASE_DATE, releaseDate);
+                movieValues.put(MovieEntry.COLUMN_POPULARITY, popularity);
+                movieValues.put(MovieEntry.COLUMN_VOTE_COUNT, voteCount);
+                movieValues.put(MovieEntry.COLUMN_VOTE_AVERAGE, voteAverage);
+                movieValues.put(MovieEntry.COLUMN_POSTER_PATH, posterPath);
+                movieValues.put(MovieEntry.COLUMN_ADULT, adult ? 1 : 0);
+                movieValues.put(MovieEntry.COLUMN_VIDEO, video ? 1 : 0);
 
-            String title = movie.getString(TMDB_TITLE);
-            String releaseDate = movie.getString(TMDB_RELEASE_DATE);
-            String popularity = movie.getString(TMDB_POPULARITY);
-            String vote_average = movie.getString(TMDB_VOTE_AVERAGE);
+                cVVector.add(movieValues);
+            }
 
-            // TODO: Refactor this to return additional attributes when the
-            // data provider is implemented
-            resultStrs[i] = title + " - " + releaseDate + " - " + vote_average;
+            // add to database
+            if (cVVector.size() > 0) {
+                ContentValues[] cvArray = new ContentValues[cVVector.size()];
+                cVVector.toArray(cvArray);
+                mContext.getContentResolver().bulkInsert(MovieEntry.CONTENT_URI, cvArray);
+            }
+
+            // Sort order:  Get sort order from preferences
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+            String sort = prefs.getString(mContext.getString(R.string.pref_sort_key),
+                    mContext.getString(R.string.pref_sort_popularity));
+
+            String sortOrder;
+            if(sort.equals(mContext.getString(R.string.pref_sort_popularity))) {
+                sortOrder = MovieEntry.COLUMN_POPULARITY + " DESC";
+            } else {
+                sortOrder = MovieEntry.COLUMN_VOTE_AVERAGE + " DESC";
+            }
+
+            Uri movieUri = MovieEntry.CONTENT_URI;
+
+            // Display what what was stored in the bulkInsert
+            /////////////////////
+            Cursor cur = mContext.getContentResolver().query(movieUri,
+                    null, null, null, sortOrder);
+
+            cVVector = new Vector<ContentValues>(cur.getCount());
+            if (cur.moveToFirst()) {
+                do {
+                    ContentValues cv = new ContentValues();
+                    DatabaseUtils.cursorRowToContentValues(cur, cv);
+                    cVVector.add(cv);
+                } while (cur.moveToNext());
+            }
+            cur.close();
+            /////////////////////
+
+            Log.d(LOG_TAG, "FetchMoviesTask Complete. " + cVVector.size() + " Inserted");
+
+            String[] resultStrs = convertContentValuesToUXFormat(cVVector);
+            return resultStrs;
+
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, e.getMessage(), e);
+            e.printStackTrace();
         }
 
-        for (String s : resultStrs) {
-            Log.v(LOG_TAG, "Movie entry: " + s);
-        }
+        return null;
+    }
 
+    String[] convertContentValuesToUXFormat(Vector<ContentValues> cvv) {
+        // return strings to keep UI functional for now
+        String[] resultStrs = new String[cvv.size()];
+        for ( int i = 0; i < cvv.size(); i++ ) {
+            ContentValues movieValues = cvv.elementAt(i);
+            resultStrs[i] = movieValues.getAsString(MovieEntry.COLUMN_TITLE) +
+                    " - " + movieValues.getAsDouble(MovieEntry.COLUMN_POPULARITY) +
+                    " - " + movieValues.getAsDouble(MovieEntry.COLUMN_VOTE_AVERAGE);
+        }
         return resultStrs;
     }
 }

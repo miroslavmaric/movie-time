@@ -155,9 +155,18 @@ public class MovieProvider extends ContentProvider {
                 int returnCount = 0;
                 try {
                     for (ContentValues value : values) {
-                        long _id = db.insert(MovieContract.MovieEntry.TABLE_NAME, null, value);
-                        if (_id != -1) {
-                            returnCount++;
+                        // check if movie already exists in the database
+                        long movieId = value.getAsLong(MovieContract.MovieEntry.COLUMN_MOVIE_ID);
+                        int updated = db.update(MovieContract.MovieEntry.TABLE_NAME,
+                                value,
+                                MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
+                                new String[]{String.valueOf(movieId)});
+                        if (updated == 0) {
+                            // if not, insert new movie
+                            long _id = db.insert(MovieContract.MovieEntry.TABLE_NAME, null, value);
+                            if (_id != -1) {
+                                returnCount++;
+                            }
                         }
                     }
                     db.setTransactionSuccessful();
