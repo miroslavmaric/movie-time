@@ -1,12 +1,17 @@
 package com.nightsparrow.movietime;
 
+import android.content.ContentUris;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.ArrayAdapter;
+
+import com.nightsparrow.movietime.data.MovieContract;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,6 +36,62 @@ public class FetchMoviesTask extends AsyncTask<Void, Void, String[]> {
     public FetchMoviesTask(Context context, ArrayAdapter<String> moviesAdapter) {
         mContext = context;
         mMoviesAdapter = moviesAdapter;
+    }
+
+    /**
+     * Helper method to handle insertion of a new movie in the movie database.
+     *
+     * @return the row ID of the added movie.
+     */
+    long addMovie(long movieId, String title, String originalTitle,
+                  String originalLanguage, String overview, String releaseDate,
+                  double popularity, long voteCount, double vote_average,
+                  String posterPath, boolean adult, boolean video) {
+        long movieRowId;
+
+        // First, check if the movie with this city name exists in the db
+        Cursor movieCursor = mContext.getContentResolver().query(
+                MovieContract.MovieEntry.CONTENT_URI,
+                new String[]{MovieContract.MovieEntry._ID},
+                MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
+                new String[]{String.valueOf(movieId)},
+                null);
+
+        if (movieCursor.moveToFirst()) {
+            int movieIdIndex = movieCursor.getColumnIndex(MovieContract.MovieEntry._ID);
+            movieRowId = movieCursor.getLong(movieIdIndex);
+        } else {
+            // First create a ContentValues object to hold the data to be added.
+            ContentValues movieValues = new ContentValues();
+
+            // Then add the data, along with the corresponding name of the data type,
+            // so the content provider knows what kind of value is being inserted.
+            movieValues.put(MovieContract.MovieEntry.COLUMN_MOVIE_ID, movieId);
+            movieValues.put(MovieContract.MovieEntry.COLUMN_TITLE, title);
+            movieValues.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE, originalTitle);
+            movieValues.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_LANGUAGE, originalLanguage);
+            movieValues.put(MovieContract.MovieEntry.COLUMN_OVERVIEW, overview);
+            movieValues.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE, releaseDate);
+            movieValues.put(MovieContract.MovieEntry.COLUMN_POPULARITY, popularity);
+            movieValues.put(MovieContract.MovieEntry.COLUMN_VOTE_COUNT, voteCount);
+            movieValues.put(MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE, vote_average);
+            movieValues.put(MovieContract.MovieEntry.COLUMN_POSTER_PATH, posterPath);
+            movieValues.put(MovieContract.MovieEntry.COLUMN_ADULT, adult ? 1 : 0);
+            movieValues.put(MovieContract.MovieEntry.COLUMN_VIDEO, video ? 1 : 0);
+
+            // Finally, insert movie data into the database.
+            Uri insertedUri = mContext.getContentResolver().insert(
+                    MovieContract.MovieEntry.CONTENT_URI,
+                    movieValues
+            );
+
+            // The resulting URI contains the ID for the row.  Extract the movieRowId from the Uri.
+            movieRowId = ContentUris.parseId(insertedUri);
+        }
+
+        movieCursor.close();
+
+        return movieRowId;
     }
 
     @Override
@@ -102,7 +163,7 @@ public class FetchMoviesTask extends AsyncTask<Void, Void, String[]> {
             // attempting to parse it.
             return null;
         } catch (Exception e) {
-            Log.e(LOG_TAG, "Error: " + e);
+            Log.e(LOG_TAG, "Unexpected Error: " + e);
             return null;
         } finally {
             if (null != urlConnection) {
@@ -167,7 +228,7 @@ public class FetchMoviesTask extends AsyncTask<Void, Void, String[]> {
             String popularity = movie.getString(TMDB_POPULARITY);
             String vote_average = movie.getString(TMDB_VOTE_AVERAGE);
 
-            // TODO: Refactor this to return additional attributes whn the
+            // TODO: Refactor this to return additional attributes when the
             // data provider is implemented
             resultStrs[i] = title + " - " + releaseDate + " - " + vote_average;
         }

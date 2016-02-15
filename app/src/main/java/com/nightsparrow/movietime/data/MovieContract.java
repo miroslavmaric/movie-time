@@ -45,7 +45,7 @@ public class MovieContract {
         public static final String TABLE_NAME = "movie";
 
         // ID of the movie, from themovedb
-        //public static final String COLUMN_ID = "id";
+        public static final String COLUMN_MOVIE_ID = "id";
 
         // Translated title of the movie
         public static final String COLUMN_TITLE = "title";

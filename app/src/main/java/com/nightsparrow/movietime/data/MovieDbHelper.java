@@ -23,6 +23,7 @@ public class MovieDbHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         final  String SQL_CREATE_MOVIE_TABLE = "CREATE TABLE " + MovieEntry.TABLE_NAME + " (" +
                 MovieEntry._ID + " INTEGER PRIMARY KEY, " +
+                MovieEntry.COLUMN_MOVIE_ID+ " INTEGER UNIQUE NOT NULL, " +
                 MovieEntry.COLUMN_TITLE + " TEXT NOT NULL, " +
                 MovieEntry.COLUMN_ORIGINAL_TITLE + " TEXT NOT NULL, " +
                 MovieEntry.COLUMN_ORIGINAL_LANGUAGE + " TEXT NOT NULL, " +
@@ -44,7 +45,7 @@ public class MovieDbHelper extends SQLiteOpenHelper {
         // This database is only a cache for online data, so its upgrade policy is
         // to simply to discard the data and start over
         // Note that this only fires if you change the version number for your database.
-        // It does NOT depend on the version number for your application.
+        // It does NOT depend on the version number for the application.
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + MovieEntry.TABLE_NAME);
         onCreate(sqLiteDatabase);
     }
