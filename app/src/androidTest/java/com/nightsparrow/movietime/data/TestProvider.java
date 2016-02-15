@@ -1,11 +1,13 @@
 package com.nightsparrow.movietime.data;
 
 import android.content.ComponentName;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.test.AndroidTestCase;
 
 import com.nightsparrow.movietime.data.MovieContract.MovieEntry;
@@ -72,4 +74,35 @@ public class TestProvider extends AndroidTestCase {
         TestUtilities.validateCursor("testBasicWeatherQuery", movieCursor, movieValues);
     }
 
+
+    public void testInsertReadProvider() {
+        ContentValues testValues = TestUtilities.createImaginaryMovieValues();
+
+        // TODO: Test Content Observer
+        // mContext.getContentResolver().registerContentObserver(MovieEntry.CONTENT_URI, true, tco);
+        // mContext.getContentResolver().registerContentObserver(MovieEntry.CONTENT_URI, true, tco);
+        // wait fo notification or fail ...
+        // mContext.getContentResolver().unregisterContentObserver(tco);
+
+        Uri locationUri = mContext.getContentResolver().insert(MovieEntry.CONTENT_URI, testValues);
+
+        long locationRowId = ContentUris.parseId(locationUri);
+
+        // Verify we got a row back.
+        assertTrue(locationRowId != -1);
+
+        // Data is, theoretically, inserted. {ull some out to stare at it and verify it made
+        // the round trip.
+
+        Cursor cursor = mContext.getContentResolver().query(
+                MovieEntry.CONTENT_URI,
+                null, // leaving "columns" null just returns all the columns.
+                null, // cols for "where" clause
+                null, // values for "where" clause
+                null  // sort order
+        );
+
+        TestUtilities.validateCursor("testInsertReadProvider. Error validating LocationEntry.",
+                cursor, testValues);
+    }
 }
