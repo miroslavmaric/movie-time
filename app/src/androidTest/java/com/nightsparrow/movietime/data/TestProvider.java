@@ -133,7 +133,7 @@ public class TestProvider extends AndroidTestCase {
 
         int count = mContext.getContentResolver().update(
                 MovieEntry.CONTENT_URI, updatedValues, MovieEntry._ID + "= ?",
-                new String[] { Long.toString(movieRowId)});
+                new String[]{Long.toString(movieRowId)});
         assertEquals(count, 1);
         movieCursor.close();
 
@@ -148,6 +148,32 @@ public class TestProvider extends AndroidTestCase {
         TestUtilities.validateCursor("testUpdateMovie.  Error validating movie entry update.",
                 cursor, updatedValues);
 
+        cursor.close();
+    }
+
+    public void testDeleteRecords() {
+        testInsertReadProvider();
+
+        // TODO: Test content observer
+
+        deleteAllRecordsFromProvider();
+    }
+
+    public void deleteAllRecordsFromProvider() {
+        mContext.getContentResolver().delete(
+                MovieEntry.CONTENT_URI,
+                null,
+                null
+        );
+
+        Cursor cursor = mContext.getContentResolver().query(
+                MovieEntry.CONTENT_URI,
+                null,
+                null,
+                null,
+                null
+        );
+        assertEquals("Error: Records not deleted from Movie table during delete", 0, cursor.getCount());
         cursor.close();
     }
 }
