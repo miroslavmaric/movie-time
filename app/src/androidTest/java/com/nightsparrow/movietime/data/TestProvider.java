@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.test.AndroidTestCase;
+import android.util.Log;
 
 import com.nightsparrow.movietime.data.MovieContract.MovieEntry;
 
@@ -71,7 +72,9 @@ public class TestProvider extends AndroidTestCase {
         );
 
         // Make sure we get the correct cursor out of the database
-        TestUtilities.validateCursor("testBasicWeatherQuery", movieCursor, movieValues);
+        TestUtilities.validateCursor("testBasicMovieQuery", movieCursor, movieValues);
+
+        movieCursor.close();
     }
 
 
@@ -84,12 +87,12 @@ public class TestProvider extends AndroidTestCase {
         // wait fo notification or fail ...
         // mContext.getContentResolver().unregisterContentObserver(tco);
 
-        Uri locationUri = mContext.getContentResolver().insert(MovieEntry.CONTENT_URI, testValues);
+        Uri movieUri = mContext.getContentResolver().insert(MovieEntry.CONTENT_URI, testValues);
 
-        long locationRowId = ContentUris.parseId(locationUri);
+        long movieRowId = ContentUris.parseId(movieUri);
 
         // Verify we got a row back.
-        assertTrue(locationRowId != -1);
+        assertTrue(movieRowId != -1);
 
         // Data is, theoretically, inserted. {ull some out to stare at it and verify it made
         // the round trip.
@@ -102,7 +105,49 @@ public class TestProvider extends AndroidTestCase {
                 null  // sort order
         );
 
-        TestUtilities.validateCursor("testInsertReadProvider. Error validating LocationEntry.",
+        TestUtilities.validateCursor("testInsertReadProvider. Error validating MovieEntry.",
                 cursor, testValues);
+
+        cursor.close();
+    }
+
+    public void testUpdateMovie() {
+        // Create a new map of values, where column names are the keys
+        ContentValues values = TestUtilities.createImaginaryMovieValues();
+
+        Uri movieUri = mContext.getContentResolver().
+                insert(MovieEntry.CONTENT_URI, values);
+        long movieRowId = ContentUris.parseId(movieUri);
+
+        // Verify we got a row back.
+        assertTrue(movieRowId != -1);
+        Log.d(LOG_TAG, "New row id: " + movieRowId);
+
+        ContentValues updatedValues = new ContentValues(values);
+        updatedValues.put(MovieEntry._ID, movieRowId);
+        updatedValues.put(MovieEntry.COLUMN_TITLE, "Some strange title");
+
+        // TODO: Test content observer
+
+        Cursor movieCursor = mContext.getContentResolver().query(MovieEntry.CONTENT_URI, null, null, null, null);
+
+        int count = mContext.getContentResolver().update(
+                MovieEntry.CONTENT_URI, updatedValues, MovieEntry._ID + "= ?",
+                new String[] { Long.toString(movieRowId)});
+        assertEquals(count, 1);
+        movieCursor.close();
+
+        Cursor cursor = mContext.getContentResolver().query(
+                MovieEntry.CONTENT_URI,
+                null,   // projection
+                MovieEntry._ID + " = " + movieRowId,
+                null,   // Values for the "where" clause
+                null    // sort order
+        );
+
+        TestUtilities.validateCursor("testUpdateMovie.  Error validating movie entry update.",
+                cursor, updatedValues);
+
+        cursor.close();
     }
 }
