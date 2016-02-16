@@ -20,6 +20,44 @@ public class TestProvider extends AndroidTestCase {
 
     public static final String LOG_TAG = TestProvider.class.getSimpleName();
 
+    /*
+       This helper function deletes all records from both database tables using the ContentProvider.
+       It also queries the ContentProvider to make sure that the database has been successfully
+       deleted, so it cannot be used until the Query and Delete functions have been written
+       in the ContentProvider.
+     */
+    public void deleteAllRecordsFromProvider() {
+        mContext.getContentResolver().delete(
+                MovieEntry.CONTENT_URI,
+                null,
+                null
+        );
+
+        Cursor cursor = mContext.getContentResolver().query(
+                MovieEntry.CONTENT_URI,
+                null,
+                null,
+                null,
+                null
+        );
+        assertEquals("Error: Records not deleted from Weather table during delete", 0, cursor.getCount());
+        cursor.close();
+    }
+
+
+    public void deleteAllRecords() {
+        deleteAllRecordsFromProvider();
+    }
+
+    // Since we want each test to start with a clean slate, run deleteAllRecords
+    // in setUp (called by the test runner before each test).
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        deleteAllRecords();
+    }
+
+
     public void testProviderRegistry() {
         PackageManager pm = mContext.getPackageManager();
 
@@ -49,6 +87,14 @@ public class TestProvider extends AndroidTestCase {
         // vnd.android.cursor.dir/com.nightsparrow.movietimep/movie/
         assertEquals("Error: the MovieEntry CONTENT_URI should return MovieEntry.CONTENT_TYPE",
                 MovieEntry.CONTENT_TYPE, type);
+
+        long testMovieId = 111000;
+        // content://com.nightsparrow.movietimep/movie/94074
+        type = mContext.getContentResolver().getType(
+                MovieEntry.buildMovieWithMovieId(testMovieId));
+        // vnd.android.cursor.dir/com.nightsparrow.movietimep/movie/
+        assertEquals("Error: the MovieEntry CONTENT_URI with movie id should return MovieEntry.CONTENT_ITEM_TYPE",
+                MovieEntry.CONTENT_ITEM_TYPE, type);
     }
 
     public void testBasicMovieQuery() {
@@ -57,6 +103,7 @@ public class TestProvider extends AndroidTestCase {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         ContentValues movieValues = TestUtilities.createImaginaryMovieValues();
+        //getContext().getContentResolver().u(MovieEntry.buildMovieUri(3));
         long movieRowId = db.insert(MovieEntry.TABLE_NAME, null, movieValues);
         assertTrue("Unable to Insert MovieEntry into the Database", movieRowId != -1);
 
@@ -159,21 +206,90 @@ public class TestProvider extends AndroidTestCase {
         deleteAllRecordsFromProvider();
     }
 
-    public void deleteAllRecordsFromProvider() {
-        mContext.getContentResolver().delete(
-                MovieEntry.CONTENT_URI,
-                null,
-                null
-        );
+
+    public void testBulkInsert() {
+        deleteAllRecordsFromProvider();
+
+        //  Create a movie value
+        ContentValues testValues = TestUtilities.createImaginaryMovieValues();
+        Uri locationUri = mContext.getContentResolver().insert(MovieEntry.CONTENT_URI, testValues);
+        long movieRowId = ContentUris.parseId(locationUri);
+
+        // Verify we got a row back.
+        assertTrue(movieRowId != -1);
+
+        // Data's inserted.  Now pull some out to stare at it and verify it made
+        // the round trip.
 
         Cursor cursor = mContext.getContentResolver().query(
                 MovieEntry.CONTENT_URI,
-                null,
-                null,
-                null,
+                null, // leaving "columns" null just returns all the columns.
+                null, // cols for "where" clause
+                null, // values for "where" clause
+                null  // sort order
+        );
+
+        TestUtilities.validateCursor("testBulkInsert. Error validating MovieEntry.",
+                cursor, testValues);
+
+        // Now we can bulkInsert some movies.
+        ContentValues[] bulkInsertContentValues = createBulkInsertWeatherValues(movieRowId);
+
+
+        // TODO: Test content observer
+        // movieObserver = getTestContentObserver
+        // mContext.getContentResolver().registerContentObserver(MovieEntry.CONTENT_URI, true, movieObserver);
+        // Register a content observer for our bulk insert.
+        // do the bulk insert
+        // movieObserver.waitForNotificationOrFail();
+        // mContext.getContentResolver().unregisterContentObserver(movieObserver);
+
+        int insertCount = mContext.getContentResolver().bulkInsert(MovieEntry.CONTENT_URI, bulkInsertContentValues);
+
+        assertEquals(insertCount, BULK_INSERT_RECORDS_TO_INSERT);
+
+        cursor = mContext.getContentResolver().query(
+                MovieEntry.CONTENT_URI,
+                null, // return all the columns.
+                null, // cols for "where" clause
+                null, // values for "where" clause
                 null
         );
-        assertEquals("Error: Records not deleted from Movie table during delete", 0, cursor.getCount());
+
+        // there should be as many records in the database as we've inserted
+        assertEquals(cursor.getCount(), BULK_INSERT_RECORDS_TO_INSERT);
+
+        // make sure they match the ones we created
+        cursor.moveToFirst();
+        for ( int i = 0; i < BULK_INSERT_RECORDS_TO_INSERT; i++, cursor.moveToNext() ) {
+            TestUtilities.validateCurrentRecord("testBulkInsert.  Error validating MovieEntry " + i,
+                    cursor, bulkInsertContentValues[i]);
+        }
         cursor.close();
     }
+
+    static private final int BULK_INSERT_RECORDS_TO_INSERT = 4;
+    static ContentValues[] createBulkInsertWeatherValues(long locationRowId) {
+        ContentValues[] returnContentValues = new ContentValues[BULK_INSERT_RECORDS_TO_INSERT];
+        long currentMovieId = 333333;
+
+        for ( int i = 0; i < BULK_INSERT_RECORDS_TO_INSERT; ++i, currentMovieId+= 1 ) {
+            ContentValues movieValues = new ContentValues();
+            movieValues.put(MovieEntry.COLUMN_MOVIE_ID, currentMovieId);
+            movieValues.put(MovieContract.MovieEntry.COLUMN_TITLE, "Some movie title");
+            movieValues.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE, "Original  movie title");
+            movieValues.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_LANGUAGE, "en");
+            movieValues.put(MovieContract.MovieEntry.COLUMN_OVERVIEW, "some overview");
+            movieValues.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE, "2120-12-05");
+            movieValues.put(MovieContract.MovieEntry.COLUMN_POPULARITY, 7.0 );
+            movieValues.put(MovieContract.MovieEntry.COLUMN_VOTE_COUNT, currentMovieId/2);
+            movieValues.put(MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE, "8.0");
+            movieValues.put(MovieContract.MovieEntry.COLUMN_POSTER_PATH, "/asd78asd");
+            movieValues.put(MovieContract.MovieEntry.COLUMN_ADULT, 0);
+            movieValues.put(MovieContract.MovieEntry.COLUMN_VIDEO, 0);
+            returnContentValues[i] = movieValues;
+        }
+        return returnContentValues;
+    }
+
 }
