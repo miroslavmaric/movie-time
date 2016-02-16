@@ -21,11 +21,11 @@ public class MoviesAdapter extends CursorAdapter {
 
     private String convertCursorRowToUXFormat(Cursor cursor) {
         // get row indices for our cursor
-        int title = cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_TITLE);
-        int popularity = cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_POPULARITY);
-        int rating = cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE);
+        int titleIdx = cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_TITLE);
+        int popularityIdx = cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_POPULARITY);
+        int ratingIdx = cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE);
 
-        return title + " - " + popularity + " - " + rating;
+        return cursor.getString(titleIdx) + " - " + cursor.getDouble(popularityIdx) + " - " + cursor.getDouble(ratingIdx);
     }
 
     /*

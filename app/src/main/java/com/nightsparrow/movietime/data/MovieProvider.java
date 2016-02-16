@@ -16,6 +16,10 @@ public class MovieProvider extends ContentProvider {
     private MovieDbHelper mOpenHelper;
 
     static final int MOVIE = 100;
+    static final int MOVIE_WITH_MOVIE_ID = 101;
+
+    private static final String sMovieIdSelection =
+            MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ? ";
 
     static UriMatcher buildUriMatcher() {
 
@@ -27,6 +31,7 @@ public class MovieProvider extends ContentProvider {
 
         // For each type of URI, create a corresponding code.
         matcher.addURI(authority, MovieContract.PATH_MOVIE, MOVIE);
+        matcher.addURI(authority, MovieContract.PATH_MOVIE + "/#", MOVIE_WITH_MOVIE_ID);
 
         return matcher;
     }
@@ -47,6 +52,8 @@ public class MovieProvider extends ContentProvider {
         switch (match) {
             case MOVIE:
                 return MovieContract.MovieEntry.CONTENT_TYPE;
+            case MOVIE_WITH_MOVIE_ID:
+                return MovieContract.MovieEntry.CONTENT_ITEM_TYPE;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -72,13 +79,32 @@ public class MovieProvider extends ContentProvider {
                 );
                 break;
             }
-
+            case MOVIE_WITH_MOVIE_ID: {
+                retCursor = getMovieByMovieId(uri, projection, sortOrder);
+                break;
+            }
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
         retCursor.setNotificationUri(getContext().getContentResolver(), uri);
         return retCursor;
     }
+
+    private Cursor getMovieByMovieId(
+            Uri uri, String[] projection, String sortOrder) {
+        long movieId = MovieContract.MovieEntry.getMovieIdFromUri(uri);
+
+        return mOpenHelper.getReadableDatabase().query(
+                MovieContract.MovieEntry.TABLE_NAME,
+                projection,
+                sMovieIdSelection,
+                new String[]{Long.toString(movieId)},
+                null,
+                null,
+                sortOrder
+        );
+    }
+
 
     @Override
     public Uri insert(Uri uri, ContentValues values) {
@@ -88,11 +114,41 @@ public class MovieProvider extends ContentProvider {
 
         switch (match) {
             case MOVIE: {
-                long _id = db.insert(MovieContract.MovieEntry.TABLE_NAME, null, values);
-                if (_id > 0)
+                // check if movie already exists in the database
+                long movieId = values.getAsLong(MovieContract.MovieEntry.COLUMN_MOVIE_ID);
+                int rowsUpdated = db.update(MovieContract.MovieEntry.TABLE_NAME,
+                        values,
+                        MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
+                        new String[]{String.valueOf(movieId)});
+                if (rowsUpdated > 0) {
+                    // get the uri
+                    Cursor cursor = mOpenHelper.getReadableDatabase().query(
+                            MovieContract.MovieEntry.TABLE_NAME,
+                            null,
+                            MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
+                            new String[]{String.valueOf(movieId)},
+                            null,
+                            null,
+                            null
+                    );
+
+                    long _id = -1;
+                    if(cursor.moveToFirst())
+                        _id = cursor.getLong(cursor.getColumnIndex(MovieContract.MovieEntry._ID));
+                     else
+                        throw new android.database.SQLException("Failed to insert row into " + uri);
+
+                    cursor.close();
+
                     returnUri = MovieContract.MovieEntry.buildMovieUri(_id);
-                else
-                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                } else {
+                    // the move deas not already exist in the database
+                    long _id = db.insert(MovieContract.MovieEntry.TABLE_NAME, null, values);
+                    if (_id > 0)
+                        returnUri = MovieContract.MovieEntry.buildMovieUri(_id);
+                    else
+                        throw new android.database.SQLException("Failed to insert row into " + uri);
+                }
                 break;
             }
             default:
@@ -157,11 +213,13 @@ public class MovieProvider extends ContentProvider {
                     for (ContentValues value : values) {
                         // check if movie already exists in the database
                         long movieId = value.getAsLong(MovieContract.MovieEntry.COLUMN_MOVIE_ID);
-                        int updated = db.update(MovieContract.MovieEntry.TABLE_NAME,
+                        int rowsUpdated = db.update(MovieContract.MovieEntry.TABLE_NAME,
                                 value,
                                 MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
                                 new String[]{String.valueOf(movieId)});
-                        if (updated == 0) {
+                        if (rowsUpdated > 0) {
+                            returnCount++;
+                        } else {
                             // if not, insert new movie
                             long _id = db.insert(MovieContract.MovieEntry.TABLE_NAME, null, value);
                             if (_id != -1) {

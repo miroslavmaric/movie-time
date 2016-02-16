@@ -1,5 +1,6 @@
 package com.nightsparrow.movietime;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
@@ -9,12 +10,14 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.nightsparrow.movietime.data.MovieContract;
@@ -30,6 +33,7 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
     // Specify which columns are used in the UI
     private static final String[] MOVIE_COLUMNS = {
             MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry._ID,
+            MovieContract.MovieEntry.COLUMN_MOVIE_ID,
             MovieContract.MovieEntry.COLUMN_TITLE,
             MovieContract.MovieEntry.COLUMN_OVERVIEW,
             MovieContract.MovieEntry.COLUMN_RELEASE_DATE,
@@ -39,12 +43,13 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
 
     // These indices are tied to MOVIE_COLUMNS. If MOVIE_COLUMNS changes, these
     // must change.
-    static final int COL_MOVIE_ID = 0;
-    static final int COL_MOVIE_TITLE = 1;
-    static final int COL_MOVIE_IVERVIEW = 2;
-    static final int COL_MOVIE_RELEASE_DATE = 3;
-    static final int COL_MOVIE_POPULARITY = 4;
-    static final int COL_VOTE_AVERAGE = 5;
+    static final int COL_ID = 0;
+    static final int COL_MOVIE_ID = 1;
+    static final int COL_MOVIE_TITLE = 2;
+    static final int COL_MOVIE_IVERVIEW = 3;
+    static final int COL_MOVIE_RELEASE_DATE = 4;
+    static final int COL_MOVIE_POPULARITY = 5;
+    static final int COL_VOTE_AVERAGE = 6;
 
     private MoviesAdapter mMoviesAdapter;
 
@@ -90,8 +95,27 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        ListView listview = (ListView) rootView.findViewById(R.id.listview_movie);
-        listview.setAdapter(mMoviesAdapter);
+        ListView listView = (ListView) rootView.findViewById(R.id.listview_movie);
+        listView.setAdapter(mMoviesAdapter);
+
+        // We'll call our MainActivity
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                // CursorAdapter returns a cursor at the correct position for getItem(), or null
+                // if it cannot seek to that position.
+                Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
+                if (cursor != null) {
+                    Intent intent = new Intent(getActivity(), DetailActivity.class)
+                            .setData(MovieContract.MovieEntry.buildMovieUri(cursor.getLong(COL_MOVIE_ID)));
+                    startActivity(intent);
+                }
+            }
+        });
+
+        // what did we get
+        //getContext().getContentResolver().get
 
         return rootView;
     }
@@ -126,14 +150,22 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
 
         return new CursorLoader(getActivity(),
                 movieUri,
-                null,
                 MOVIE_COLUMNS,
+                null,
                 null,
                 sortOrder);
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
+        // Check cursor content
+            while (cursor.moveToNext())
+            {
+                String title = cursor.getString(1);
+                Log.v(LOG_TAG, "movie title: " + title);
+
+            }
+
         mMoviesAdapter.swapCursor(cursor);
     }
 
