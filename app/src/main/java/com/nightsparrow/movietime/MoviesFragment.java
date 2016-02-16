@@ -6,6 +6,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -19,10 +22,11 @@ import com.nightsparrow.movietime.data.MovieContract;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MoviesFragment extends Fragment {
+public class MoviesFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private final String LOG_TAG =  MoviesFragment.class.getSimpleName();
 
+    private static final int MOVIES_LOADER = 0;
     private MoviesAdapter mMoviesAdapter;
 
     public MoviesFragment() {
@@ -62,6 +66,31 @@ public class MoviesFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        // The CursorAdapter will take data from our cursor and populate the ListView.
+        mMoviesAdapter = new MoviesAdapter(getActivity(), null, 0);
+
+        View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+
+        ListView listview = (ListView) rootView.findViewById(R.id.listview_movie);
+        listview.setAdapter(mMoviesAdapter);
+
+        return rootView;
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        getLoaderManager().initLoader(MOVIES_LOADER, null, this);
+        super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        updateMovies();
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         // Sort order:  Get sort order from preferences
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         String sort = prefs.getString(getActivity().getString(R.string.pref_sort_key),
@@ -76,21 +105,21 @@ public class MoviesFragment extends Fragment {
 
         Uri movieUri = MovieContract.MovieEntry.CONTENT_URI;
 
-        Cursor cur = getActivity().getContentResolver().query(movieUri,
-                null, null, null, sortOrder);
-
-        View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-
-        ListView listview = (ListView) rootView.findViewById(R.id.listview_movie);
-        listview.setAdapter(mMoviesAdapter);
-
-        return rootView;
+        return new CursorLoader(getActivity(),
+                movieUri,
+                null,
+                null,
+                null,
+                sortOrder);
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-        updateMovies();
+    public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
+        mMoviesAdapter.swapCursor(cursor);
     }
 
+    @Override
+    public void onLoaderReset(Loader<Cursor> cursorLoader) {
+        mMoviesAdapter.swapCursor(null);
+    }
 }
