@@ -27,6 +27,25 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
     private final String LOG_TAG =  MoviesFragment.class.getSimpleName();
 
     private static final int MOVIES_LOADER = 0;
+    // Specify which columns are used in the UI
+    private static final String[] MOVIE_COLUMNS = {
+            MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry._ID,
+            MovieContract.MovieEntry.COLUMN_TITLE,
+            MovieContract.MovieEntry.COLUMN_OVERVIEW,
+            MovieContract.MovieEntry.COLUMN_RELEASE_DATE,
+            MovieContract.MovieEntry.COLUMN_POPULARITY,
+            MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE,
+    };
+
+    // These indices are tied to MOVIE_COLUMNS. If MOVIE_COLUMNS changes, these
+    // must change.
+    static final int COL_MOVIE_ID = 0;
+    static final int COL_MOVIE_TITLE = 1;
+    static final int COL_MOVIE_IVERVIEW = 2;
+    static final int COL_MOVIE_RELEASE_DATE = 3;
+    static final int COL_MOVIE_POPULARITY = 4;
+    static final int COL_VOTE_AVERAGE = 5;
+
     private MoviesAdapter mMoviesAdapter;
 
     public MoviesFragment() {
@@ -108,7 +127,7 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
         return new CursorLoader(getActivity(),
                 movieUri,
                 null,
-                null,
+                MOVIE_COLUMNS,
                 null,
                 sortOrder);
     }
