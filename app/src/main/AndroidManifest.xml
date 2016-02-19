@@ -40,6 +40,8 @@
             android:name=".data.MovieProvider"
             android:exported="false"
             android:syncable="true" />
+
+        <service android:name=".service.MovieTimeService"/>
     </application>
 
 </manifest>

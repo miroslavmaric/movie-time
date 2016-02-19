@@ -21,6 +21,7 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 
 import com.nightsparrow.movietime.data.MovieContract;
+import com.nightsparrow.movietime.service.MovieTimeService;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -84,8 +85,14 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
     }
 
     private void updateMovies() {
-        FetchMoviesTask movieTask = new FetchMoviesTask(getActivity());
-        movieTask.execute();
+        // Get the sort by option from the preferences
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        String sortPrerf = prefs.getString(getContext().getString(R.string.pref_sort_key),
+                getContext().getString(R.string.pref_sort_popularity));
+
+        Intent intent = new Intent(getActivity(), MovieTimeService.class);
+        intent.putExtra(MovieTimeService.SORT_QUERY_EXTRA, sortPrerf);
+        getActivity().startService(intent);
     }
 
     @Override
