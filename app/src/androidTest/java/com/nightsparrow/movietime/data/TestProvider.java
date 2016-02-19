@@ -21,11 +21,11 @@ public class TestProvider extends AndroidTestCase {
     public static final String LOG_TAG = TestProvider.class.getSimpleName();
 
     /*
-       This helper function deletes all records from both database tables using the ContentProvider.
-       It also queries the ContentProvider to make sure that the database has been successfully
-       deleted, so it cannot be used until the Query and Delete functions have been written
-       in the ContentProvider.
-     */
+      This helper function deletes all records from both database tables using the ContentProvider.
+      It also queries the ContentProvider to make sure that the database has been successfully
+      deleted, so it cannot be used until the Query and Delete functions have been written
+      in the ContentProvider.
+    */
     public void deleteAllRecordsFromProvider() {
         mContext.getContentResolver().delete(
                 MovieEntry.CONTENT_URI,
@@ -42,11 +42,6 @@ public class TestProvider extends AndroidTestCase {
         );
         assertEquals("Error: Records not deleted from Weather table during delete", 0, cursor.getCount());
         cursor.close();
-    }
-
-
-    public void deleteAllRecords() {
-        deleteAllRecordsFromProvider();
     }
 
     // Since we want each test to start with a clean slate, run deleteAllRecords
@@ -292,4 +287,7 @@ public class TestProvider extends AndroidTestCase {
         return returnContentValues;
     }
 
+    public void deleteAllRecords() {
+        deleteAllRecordsFromProvider();
+    }
 }

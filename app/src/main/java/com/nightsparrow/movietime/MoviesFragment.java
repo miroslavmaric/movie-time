@@ -18,7 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ListView;
+import android.widget.GridView;
 
 import com.nightsparrow.movietime.data.MovieContract;
 
@@ -39,6 +39,7 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
             MovieContract.MovieEntry.COLUMN_RELEASE_DATE,
             MovieContract.MovieEntry.COLUMN_POPULARITY,
             MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE,
+            MovieContract.MovieEntry.COLUMN_POSTER_PATH
     };
 
     // These indices are tied to MOVIE_COLUMNS. If MOVIE_COLUMNS changes, these
@@ -50,6 +51,7 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
     static final int COL_MOVIE_RELEASE_DATE = 4;
     static final int COL_MOVIE_POPULARITY = 5;
     static final int COL_VOTE_AVERAGE = 6;
+    static final int COL_POSTER_PATH = 7;
 
     private MoviesAdapter mMoviesAdapter;
 
@@ -93,13 +95,13 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
         // The CursorAdapter will take data from our cursor and populate the ListView.
         mMoviesAdapter = new MoviesAdapter(getActivity(), null, 0);
 
-        View rootView = inflater.inflate(R.layout.fragment_main, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_movies, container, false);
 
-        ListView listView = (ListView) rootView.findViewById(R.id.listview_movie);
-        listView.setAdapter(mMoviesAdapter);
+        GridView gridView = (GridView) rootView.findViewById(R.id.grid_view);
+        gridView.setAdapter(mMoviesAdapter);
 
         // We'll call our MainActivity
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
