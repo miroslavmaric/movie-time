@@ -12,9 +12,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.nightsparrow.movietime.data.MovieContract;
+import com.squareup.picasso.Picasso;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -32,6 +34,7 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
             MovieContract.MovieEntry.COLUMN_RELEASE_DATE,
             MovieContract.MovieEntry.COLUMN_POPULARITY,
             MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE,
+            MovieContract.MovieEntry.COLUMN_POSTER_PATH
     };
 
     // these constants correspond to the projection defined above, and must change if the
@@ -42,6 +45,7 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
     private static final int COL_MOVIE_RELEASE_DATE = 3;
     private static final int COL_MOVIE_POPULARITY = 4;
     private static final int COL_VOTE_AVERAGE = 5;
+    private static final int COL_POSTER_PATH = 6;
 
     private String mMoviesString;
 
@@ -94,11 +98,27 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
         String title = data.getString(COL_MOVIE_TITLE);
         double popularity = data.getDouble(COL_MOVIE_POPULARITY);
         double rating = data.getDouble(COL_VOTE_AVERAGE);
+        mMoviesString = String.format("%s \n %f \n %f", title, popularity, rating);
 
-        mMoviesString = String.format("%s - %f - %f", title, popularity, rating);
-
-        TextView detailTextView = (TextView)getView().findViewById(R.id.textview_detail);
+        TextView detailTextView = (TextView)getView().findViewById(R.id.text_view_detail);
         detailTextView.setText(mMoviesString);
+
+        ImageView iv = (ImageView)getView().findViewById(R.id.image_view_detail);;
+
+        // Build the image url
+        final String TMD_BASE = "http://image.tmdb.org/t/p/";
+        final String SIZE = "w185";
+        final String POSTER_PATH =
+                data.getString(COL_POSTER_PATH);
+
+        Uri posterUri = Uri.parse(TMD_BASE).buildUpon()
+                .appendPath(SIZE)
+                .appendPath(POSTER_PATH)
+                .build();
+
+        // Use Picasso to fetch the image from the web and load it into image view
+        Picasso.with(getContext()).load(posterUri).into(iv);
+
     }
 
     @Override
