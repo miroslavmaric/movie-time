@@ -221,7 +221,7 @@ public class FetchMoviesTask extends AsyncTask<Void, Void, Void> {
                 double popularity = movie.getDouble(TMDB_POPULARITY);
                 long voteCount = movie.getLong(TMDB_VOTE_COUNT);
                 double voteAverage = movie.getDouble(TMDB_VOTE_AVERAGE);
-                String posterPath = movie.getString(TMDB_POSTER_PATH);
+                String posterPath = movie.getString(TMDB_POSTER_PATH).substring(1); // skip '/'
                 boolean adult = movie.getBoolean(TMBS_ADULT);
                 boolean video = movie.getBoolean(TMBD_VIDEO);
 

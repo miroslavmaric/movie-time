@@ -14,13 +14,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // TODO: Swap views and data fields
-//        // Temporary testing layout
-//        setContentView(R.layout.grid_layout);
-//
-//        GridView gridView = (GridView) findViewById(R.id.grid_view);
-//
-//        // Instance of ImageAdapter Class
-//        gridView.setAdapter(new ImageAdapter(this));
+
     }
 
 
