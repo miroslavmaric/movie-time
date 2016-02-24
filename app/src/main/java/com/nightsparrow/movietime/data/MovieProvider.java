@@ -218,7 +218,7 @@ public class MovieProvider extends ContentProvider {
                                 MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
                                 new String[]{String.valueOf(movieId)});
                         if (rowsUpdated > 0) {
-                            returnCount++;
+                            returnCount+=rowsUpdated;
                         } else {
                             // if not, insert new movie
                             long _id = db.insert(MovieContract.MovieEntry.TABLE_NAME, null, value);

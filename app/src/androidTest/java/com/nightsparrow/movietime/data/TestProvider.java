@@ -119,17 +119,23 @@ public class TestProvider extends AndroidTestCase {
         movieCursor.close();
     }
 
+    public void deleteAllRecords() {
+        deleteAllRecordsFromProvider();
+    }
 
     public void testInsertReadProvider() {
         ContentValues testValues = TestUtilities.createImaginaryMovieValues();
 
-        // TODO: Test Content Observer
-        // mContext.getContentResolver().registerContentObserver(MovieEntry.CONTENT_URI, true, tco);
-        // mContext.getContentResolver().registerContentObserver(MovieEntry.CONTENT_URI, true, tco);
-        // wait fo notification or fail ...
-        // mContext.getContentResolver().unregisterContentObserver(tco);
+        // Register a content observer for our insert.  This time, directly with the content resolver
+        TestUtilities.TestContentObserver movieObserver = TestUtilities.getTestContentObserver();
+        mContext.getContentResolver().registerContentObserver(MovieEntry.CONTENT_URI, true, movieObserver);
 
         Uri movieUri = mContext.getContentResolver().insert(MovieEntry.CONTENT_URI, testValues);
+
+        // Did our content observer get called?  Students:  If this fails, your insert location
+        // isn't calling getContext().getContentResolver().notifyChange(uri, null);
+        movieObserver.waitForNotificationOrFail();
+        mContext.getContentResolver().unregisterContentObserver(movieObserver);
 
         long movieRowId = ContentUris.parseId(movieUri);
 
@@ -169,14 +175,22 @@ public class TestProvider extends AndroidTestCase {
         updatedValues.put(MovieEntry._ID, movieRowId);
         updatedValues.put(MovieEntry.COLUMN_TITLE, "Some strange title");
 
-        // TODO: Test content observer
-
+        // Create a cursor with observer to make sure that the content provider is notifying
+        // the observers as expected
         Cursor movieCursor = mContext.getContentResolver().query(MovieEntry.CONTENT_URI, null, null, null, null);
+
+        TestUtilities.TestContentObserver movieObserver = TestUtilities.getTestContentObserver();
+        movieCursor.registerContentObserver(movieObserver);
 
         int count = mContext.getContentResolver().update(
                 MovieEntry.CONTENT_URI, updatedValues, MovieEntry._ID + "= ?",
                 new String[]{Long.toString(movieRowId)});
         assertEquals(count, 1);
+        movieCursor.close();
+
+        // Test to make sure our observer is called.
+        movieObserver.waitForNotificationOrFail();
+        movieCursor.unregisterContentObserver(movieObserver);
         movieCursor.close();
 
         Cursor cursor = mContext.getContentResolver().query(
@@ -193,57 +207,23 @@ public class TestProvider extends AndroidTestCase {
         cursor.close();
     }
 
-    public void testDeleteRecords() {
-        testInsertReadProvider();
-
-        // TODO: Test content observer
-
-        deleteAllRecordsFromProvider();
-    }
-
-
     public void testBulkInsert() {
-        deleteAllRecordsFromProvider();
 
-        //  Create a movie value
-        ContentValues testValues = TestUtilities.createImaginaryMovieValues();
-        Uri locationUri = mContext.getContentResolver().insert(MovieEntry.CONTENT_URI, testValues);
-        long movieRowId = ContentUris.parseId(locationUri);
+        // Get some movies for bulkinsert.
+        ContentValues[] bulkInsertContentValues = createBulkInsertWeatherValues();
 
-        // Verify we got a row back.
-        assertTrue(movieRowId != -1);
-
-        // Data's inserted.  Now pull some out to stare at it and verify it made
-        // the round trip.
-
-        Cursor cursor = mContext.getContentResolver().query(
-                MovieEntry.CONTENT_URI,
-                null, // leaving "columns" null just returns all the columns.
-                null, // cols for "where" clause
-                null, // values for "where" clause
-                null  // sort order
-        );
-
-        TestUtilities.validateCursor("testBulkInsert. Error validating MovieEntry.",
-                cursor, testValues);
-
-        // Now we can bulkInsert some movies.
-        ContentValues[] bulkInsertContentValues = createBulkInsertWeatherValues(movieRowId);
-
-
-        // TODO: Test content observer
-        // movieObserver = getTestContentObserver
-        // mContext.getContentResolver().registerContentObserver(MovieEntry.CONTENT_URI, true, movieObserver);
         // Register a content observer for our bulk insert.
-        // do the bulk insert
-        // movieObserver.waitForNotificationOrFail();
-        // mContext.getContentResolver().unregisterContentObserver(movieObserver);
+        TestUtilities.TestContentObserver movieObserver = TestUtilities.getTestContentObserver();
+        mContext.getContentResolver().registerContentObserver(MovieEntry.CONTENT_URI, true, movieObserver);
 
         int insertCount = mContext.getContentResolver().bulkInsert(MovieEntry.CONTENT_URI, bulkInsertContentValues);
 
+        movieObserver.waitForNotificationOrFail();
+        mContext.getContentResolver().unregisterContentObserver(movieObserver);
+
         assertEquals(insertCount, BULK_INSERT_RECORDS_TO_INSERT);
 
-        cursor = mContext.getContentResolver().query(
+        Cursor cursor = mContext.getContentResolver().query(
                 MovieEntry.CONTENT_URI,
                 null, // return all the columns.
                 null, // cols for "where" clause
@@ -251,8 +231,10 @@ public class TestProvider extends AndroidTestCase {
                 null
         );
 
+
+
         // there should be as many records in the database as we've inserted
-        assertEquals(cursor.getCount(), BULK_INSERT_RECORDS_TO_INSERT);
+        assertEquals(BULK_INSERT_RECORDS_TO_INSERT, cursor.getCount());
 
         // make sure they match the ones we created
         cursor.moveToFirst();
@@ -264,9 +246,9 @@ public class TestProvider extends AndroidTestCase {
     }
 
     static private final int BULK_INSERT_RECORDS_TO_INSERT = 4;
-    static ContentValues[] createBulkInsertWeatherValues(long locationRowId) {
+    static ContentValues[] createBulkInsertWeatherValues() {
         ContentValues[] returnContentValues = new ContentValues[BULK_INSERT_RECORDS_TO_INSERT];
-        long currentMovieId = 333333;
+        long currentMovieId = 333000;
 
         for ( int i = 0; i < BULK_INSERT_RECORDS_TO_INSERT; ++i, currentMovieId+= 1 ) {
             ContentValues movieValues = new ContentValues();
@@ -276,9 +258,9 @@ public class TestProvider extends AndroidTestCase {
             movieValues.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_LANGUAGE, "en");
             movieValues.put(MovieContract.MovieEntry.COLUMN_OVERVIEW, "some overview");
             movieValues.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE, "2120-12-05");
-            movieValues.put(MovieContract.MovieEntry.COLUMN_POPULARITY, 7.0 );
+            movieValues.put(MovieContract.MovieEntry.COLUMN_POPULARITY, 7.6 );
             movieValues.put(MovieContract.MovieEntry.COLUMN_VOTE_COUNT, currentMovieId/2);
-            movieValues.put(MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE, "8.0");
+            movieValues.put(MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE, "8.4");
             movieValues.put(MovieContract.MovieEntry.COLUMN_POSTER_PATH, "/asd78asd");
             movieValues.put(MovieContract.MovieEntry.COLUMN_ADULT, 0);
             movieValues.put(MovieContract.MovieEntry.COLUMN_VIDEO, 0);
@@ -287,7 +269,17 @@ public class TestProvider extends AndroidTestCase {
         return returnContentValues;
     }
 
-    public void deleteAllRecords() {
+
+    public void testDeleteRecords() {
+        testInsertReadProvider();
+
+        // Register a content observer for movie delete.
+        TestUtilities.TestContentObserver movieObserver = TestUtilities.getTestContentObserver();
+        mContext.getContentResolver().registerContentObserver(MovieEntry.CONTENT_URI, true, movieObserver);
+
         deleteAllRecordsFromProvider();
+        movieObserver.waitForNotificationOrFail();
+
+        mContext.getContentResolver().unregisterContentObserver(movieObserver);
     }
 }

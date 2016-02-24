@@ -78,7 +78,7 @@ public class MovieContract {
         // Indicates if this is an adult title
         public static final String COLUMN_ADULT = "adult";
 
-        // Indicates if this movie has associated trailer
+        // Indicates if this movie has type video ?  // Unclear from the documentation
         public static final String COLUMN_VIDEO = "video";
 
 
