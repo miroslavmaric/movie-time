@@ -269,7 +269,6 @@ public class TestProvider extends AndroidTestCase {
         return returnContentValues;
     }
 
-
     public void testDeleteRecords() {
         testInsertReadProvider();
 
