@@ -34,7 +34,6 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
     // Specify which columns are used in the UI
     private static final String[] MOVIE_COLUMNS = {
             MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry._ID,
-            MovieContract.MovieEntry.COLUMN_MOVIE_ID,
             MovieContract.MovieEntry.COLUMN_TITLE,
             MovieContract.MovieEntry.COLUMN_OVERVIEW,
             MovieContract.MovieEntry.COLUMN_RELEASE_DATE,
@@ -46,13 +45,12 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
     // These indices are tied to MOVIE_COLUMNS. If MOVIE_COLUMNS changes, these
     // must change.
     static final int COL_ID = 0;
-    static final int COL_MOVIE_ID = 1;
-    static final int COL_MOVIE_TITLE = 2;
-    static final int COL_MOVIE_IVERVIEW = 3;
-    static final int COL_MOVIE_RELEASE_DATE = 4;
-    static final int COL_MOVIE_POPULARITY = 5;
-    static final int COL_VOTE_AVERAGE = 6;
-    static final int COL_POSTER_PATH = 7;
+    static final int COL_MOVIE_TITLE = 1;
+    static final int COL_MOVIE_IVERVIEW = 2;
+    static final int COL_MOVIE_RELEASE_DATE = 3;
+    static final int COL_MOVIE_POPULARITY = 4;
+    static final int COL_VOTE_AVERAGE = 5;
+    static final int COL_POSTER_PATH = 6;
 
     private MoviesAdapter mMoviesAdapter;
 
@@ -117,7 +115,7 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
                 Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
                 if (cursor != null) {
                     Intent intent = new Intent(getActivity(), DetailActivity.class)
-                            .setData(MovieContract.MovieEntry.buildMovieUri(cursor.getLong(COL_MOVIE_ID)));
+                            .setData(MovieContract.MovieEntry.buildMovieUri(cursor.getLong(COL_ID)));
                     startActivity(intent);
                 }
             }

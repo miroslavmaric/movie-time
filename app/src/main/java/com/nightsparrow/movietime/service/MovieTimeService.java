@@ -170,7 +170,7 @@ public class MovieTimeService extends IntentService {
 
                 ContentValues movieValues = new ContentValues();
 
-                movieValues.put(MovieContract.MovieEntry.COLUMN_MOVIE_ID, movieId);
+                movieValues.put(MovieContract.MovieEntry._ID, movieId);
                 movieValues.put(MovieContract.MovieEntry.COLUMN_TITLE, title);
                 movieValues.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE, originalTitle);
                 movieValues.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_LANGUAGE, originalLanguage);
@@ -200,8 +200,8 @@ public class MovieTimeService extends IntentService {
                 // need to keep database relatively small
 
                 // Get the movies which are not among N most popular ones
-                String where = MovieContract.MovieEntry.COLUMN_MOVIE_ID + " not in " +
-                        " ( select " + MovieContract.MovieEntry.COLUMN_MOVIE_ID + " from " +
+                String where = MovieContract.MovieEntry._ID + " not in " +
+                        " ( select " + MovieContract.MovieEntry._ID + " from " +
                         MovieContract.MovieEntry.TABLE_NAME + " order by " +
                         MovieContract.MovieEntry.COLUMN_POPULARITY + " desc limit 20);";
 

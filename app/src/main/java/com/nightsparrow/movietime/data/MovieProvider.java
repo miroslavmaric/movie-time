@@ -19,7 +19,7 @@ public class MovieProvider extends ContentProvider {
     static final int MOVIE_WITH_MOVIE_ID = 101;
 
     private static final String sMovieIdSelection =
-            MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ? ";
+            MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry._ID + " = ? ";
 
     static UriMatcher buildUriMatcher() {
 
@@ -115,17 +115,17 @@ public class MovieProvider extends ContentProvider {
         switch (match) {
             case MOVIE: {
                 // check if movie already exists in the database
-                long movieId = values.getAsLong(MovieContract.MovieEntry.COLUMN_MOVIE_ID);
+                long movieId = values.getAsLong(MovieContract.MovieEntry._ID);
                 int rowsUpdated = db.update(MovieContract.MovieEntry.TABLE_NAME,
                         values,
-                        MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
+                        MovieContract.MovieEntry._ID + " = ?",
                         new String[]{String.valueOf(movieId)});
                 if (rowsUpdated > 0) {
                     // get the uri
                     Cursor cursor = mOpenHelper.getReadableDatabase().query(
                             MovieContract.MovieEntry.TABLE_NAME,
                             null,
-                            MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
+                            MovieContract.MovieEntry._ID + " = ?",
                             new String[]{String.valueOf(movieId)},
                             null,
                             null,
@@ -142,7 +142,7 @@ public class MovieProvider extends ContentProvider {
 
                     returnUri = MovieContract.MovieEntry.buildMovieUri(_id);
                 } else {
-                    // the move deas not already exist in the database
+                    // the move does not already exist in the database
                     long _id = db.insert(MovieContract.MovieEntry.TABLE_NAME, null, values);
                     if (_id > 0)
                         returnUri = MovieContract.MovieEntry.buildMovieUri(_id);
@@ -212,10 +212,10 @@ public class MovieProvider extends ContentProvider {
                 try {
                     for (ContentValues value : values) {
                         // check if movie already exists in the database
-                        long movieId = value.getAsLong(MovieContract.MovieEntry.COLUMN_MOVIE_ID);
+                        long movieId = value.getAsLong(MovieContract.MovieEntry._ID);
                         int rowsUpdated = db.update(MovieContract.MovieEntry.TABLE_NAME,
                                 value,
-                                MovieContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
+                                MovieContract.MovieEntry._ID + " = ?",
                                 new String[]{String.valueOf(movieId)});
                         if (rowsUpdated > 0) {
                             returnCount+=rowsUpdated;

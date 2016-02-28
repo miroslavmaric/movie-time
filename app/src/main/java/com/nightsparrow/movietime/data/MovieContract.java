@@ -27,6 +27,7 @@ public class MovieContract {
     // looking at movie data. content://com.nightsparrow.movietim/givemeroot/ will fail,
     // as the ContentProvider hasn't been given any information on what to do with "givemeroot".
     public static final String PATH_MOVIE= "movie";
+    public static final String PATH_VIDEO= "video";
 
     /*
        Inner class that defines the contents of the movie table
@@ -43,9 +44,6 @@ public class MovieContract {
 
 
         public static final String TABLE_NAME = "movie";
-
-        // ID of the movie, from themovedb
-        public static final String COLUMN_MOVIE_ID = "id";
 
         // Translated title of the movie
         public static final String COLUMN_TITLE = "title";
@@ -78,8 +76,12 @@ public class MovieContract {
         // Indicates if this is an adult title
         public static final String COLUMN_ADULT = "adult";
 
-        // Indicates if this movie has type video ?  // Unclear from the documentation
+        // Indicates if this movie has type vide
         public static final String COLUMN_VIDEO = "video";
+
+        // Indicates if this is one of users favorite videos
+        // Upon insertion, it s false (0 in sqlite) by default
+        public static final String COLUMN_FAVORITE = "favorite";
 
 
         public static Uri buildMovieUri(long id) {
@@ -94,6 +96,50 @@ public class MovieContract {
             long movieId = Long.parseLong(uri.getPathSegments().get(1));
             return movieId;
         }
+    }
+
+    /*
+       Inner class that defines the contents of the videos table.
+       Each movie cah have 0 or more videos.
+     */
+    public static final class VideoEntry implements BaseColumns {
+
+        public static final Uri CONTENT_URI =
+                BASE_CONTENT_URI.buildUpon().appendPath(PATH_VIDEO).build();
+
+        public static final String CONTENT_TYPE =
+                ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_VIDEO;
+        public static final String CONTENT_ITEM_TYPE =
+                ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_VIDEO;
+
+        public static final String TABLE_NAME = "video";
+
+        // ID of the movie, from themovedb
+        public static final String COLUMN_MOVIE_KEY = "id";
+
+        // ISO representation of the video language
+        public static final String COLUMN_ISO = "iso_639_1";
+
+        // Key for the video site (e.g. youtube video key)
+        public static final String COLUMN_KEY = "key";
+
+        // Name of the video
+        public static final String COLUMN_NAME = "name";
+
+        // Site at which video is hosted (youtube)
+        public static final String COLUMN_SITE = "site";
+
+        // Number of horizontal scan lines in the video
+        public static final String COLUMN_SIZE = "size";
+
+        // Video type (e.g. trailer)
+        public static final String COLUMN_TYPE = "type";
+
+
+        public static Uri buildVideoURI(long id) {
+            return ContentUris.withAppendedId(CONTENT_URI, id);
+        }
+
     }
 
 }
