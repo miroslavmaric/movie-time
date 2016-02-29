@@ -17,6 +17,9 @@ public class MovieProvider extends ContentProvider {
 
     static final int MOVIE = 100;
     static final int MOVIE_WITH_MOVIE_ID = 101;
+    static final int VIDEO = 200;
+    static final int VIDEO_WITH_VIDEO_ID = 201;
+    static final int VIDEO_WITH_MOVIE_ID = 202;
 
     private static final String sMovieIdSelection =
             MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry._ID + " = ? ";
@@ -32,6 +35,8 @@ public class MovieProvider extends ContentProvider {
         // For each type of URI, create a corresponding code.
         matcher.addURI(authority, MovieContract.PATH_MOVIE, MOVIE);
         matcher.addURI(authority, MovieContract.PATH_MOVIE + "/#", MOVIE_WITH_MOVIE_ID);
+
+        matcher.addURI(authority, MovieContract.PATH_VIDEO, VIDEO);
 
         return matcher;
     }
