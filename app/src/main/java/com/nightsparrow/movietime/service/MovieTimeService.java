@@ -27,7 +27,7 @@ import java.util.Vector;
 public class MovieTimeService extends IntentService {
 
     // TODO: Consider using async adapter for more efficient use
-    // of battery
+    // of battery and smoother user experience
 
     private final String LOG_TAG = MovieTimeService.class.getSimpleName();
     public static final String SORT_QUERY_EXTRA = "sqe";
@@ -95,7 +95,7 @@ public class MovieTimeService extends IntentService {
             moviesJsonStr = buffer.toString();
             getMoviesDataFromJson(moviesJsonStr);
 
-            Log.v(LOG_TAG, "Data: " + moviesJsonStr);
+            //Log.v(LOG_TAG, "Data: " + moviesJsonStr);
 
         } catch (IOException e) {
             Log.e(LOG_TAG, "IO Error: " + e);
@@ -147,7 +147,10 @@ public class MovieTimeService extends IntentService {
             JSONArray moviesArray = moviesJson.getJSONArray(TMDB_RESULTS);
 
             // Insert the new movie information into the database
-            Vector<ContentValues> cVVector = new Vector<ContentValues>(moviesArray.length());
+            Vector<ContentValues> movieCvVector = new Vector<ContentValues>(moviesArray.length());
+
+            // Content values for movie videos
+            Vector<ContentValues> videoCvVector = new Vector<ContentValues>();
 
             for (int i = 0; i < moviesArray.length(); i++) {
 
@@ -183,21 +186,35 @@ public class MovieTimeService extends IntentService {
                 movieValues.put(MovieContract.MovieEntry.COLUMN_ADULT, adult ? 1 : 0);
                 movieValues.put(MovieContract.MovieEntry.COLUMN_VIDEO, video ? 1 : 0);
 
-                cVVector.add(movieValues);
+                movieCvVector.add(movieValues);
+
+                // Fetch videos associated with this movie
+                String videosJsonStr = fetchVideosForMovie(movieId);
+
+                // Content values for movie videos
+                ContentValues cv = getVideoDataFromJson(videosJsonStr);
+                videoCvVector.add(cv);
             }
 
             int inserted = 0;
             // add to database
-            if (cVVector.size() > 0) {
-                ContentValues[] cvArray = new ContentValues[cVVector.size()];
-                cVVector.toArray(cvArray);
+            if (movieCvVector.size() > 0) {
+                ContentValues[] cvArray = new ContentValues[movieCvVector.size()];
+                movieCvVector.toArray(cvArray);
                 inserted = this.getContentResolver().bulkInsert(MovieContract.MovieEntry.CONTENT_URI, cvArray);
 
-                // TODO: Delete excess movies
+                if (videoCvVector.size() > 0) {
+                    cvArray = new ContentValues[videoCvVector.size()];
+                    videoCvVector.toArray(cvArray);
+                    this.getContentResolver().bulkInsert(MovieContract.VideoEntry.CONTENT_URI, cvArray);
+                }
+
+                // TODO: Delete excess movies and videos
                 // keep only a constant number of most popular or rated
                 // (depends on current pref) movies in database
                 // OR add a pref and let user decide on the number (100, 200 or 300)
                 // need to keep database relatively small
+                // PS: also delete videos associated with these movies
 
                 // Get the movies which are not among N most popular ones
                 String where = MovieContract.MovieEntry._ID + " not in " +
@@ -220,5 +237,123 @@ public class MovieTimeService extends IntentService {
             Log.e(LOG_TAG, e.getMessage(), e);
             e.printStackTrace();
         }
+    }
+
+    private String fetchVideosForMovie(long movieId) {
+
+        HttpURLConnection urlConnection = null;
+        BufferedReader reader = null;
+
+        // Will contain the raw JSON response as a string.
+        String videosJsonStr = null;
+
+        try {
+            final String MOVIES_BASE_URL = " http://api.themoviedb.org/3/movie/" + movieId + "/videos";
+            final String API_PARAM = "api_key";
+
+            Uri builtUri = Uri.parse(MOVIES_BASE_URL).buildUpon()
+                    .appendQueryParameter(API_PARAM, BuildConfig.THE_MOVIE_DB_API_KEY)
+                    .build();
+
+            URL videoUrl = new URL(builtUri.toString());
+
+            //Log.v(LOG_TAG, " " + videoUrl);
+
+            urlConnection = (HttpURLConnection) videoUrl.openConnection();
+            urlConnection.setRequestMethod("GET");
+            urlConnection.connect();
+
+            // Read the input stream into a String
+            InputStream inputStream = urlConnection.getInputStream();
+
+            if (inputStream == null) {
+                return null;
+            }
+
+            reader = new BufferedReader(new InputStreamReader(inputStream));
+
+            StringBuffer buffer = new StringBuffer();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                // Convert to mere human friendly format
+                buffer.append(line + "\n");
+            }
+
+            if (buffer.length() == 0) {
+                return null;
+            }
+
+            videosJsonStr = buffer.toString();
+
+            Log.v(LOG_TAG, "Data: " + videosJsonStr);
+
+        } catch (IOException e) {
+            Log.e(LOG_TAG, "IO Error: " + e);
+            return null;
+        } finally {
+            if (null != urlConnection) {
+                urlConnection.disconnect();
+            }
+            if (null != reader) {
+                try {
+                    reader.close();
+                } catch (final IOException e) {
+                    Log.e(LOG_TAG, "Error closing stream " + e);
+                }
+            }
+        }
+
+        return videosJsonStr;
+    }
+
+    private ContentValues getVideoDataFromJson(String moviesJsonString) throws JSONException {
+        ContentValues videoValues = new ContentValues();
+
+        // Names of the JSON objects that need to be extracted.
+        final String TMDB_RESULTS = "results";
+        final String TMDB_MOVIE_KEY = "id";
+
+        final String TMDB_ID = "id";
+        final String TMDB_ISO = "iso_639_1";
+        final String TMDB_KEY = "key";
+        final String TMBD_NAME = "name";
+        final String TMDB_SITE = "site";
+        final String TMDB_SIZE = "size";
+        final String TMDB_TYPE = "type";
+
+        try {
+            JSONObject moviesJson = new JSONObject(moviesJsonString);
+            long movieKey = moviesJson.getLong(TMDB_MOVIE_KEY);
+            JSONArray moviesArray = moviesJson.getJSONArray(TMDB_RESULTS);
+
+            for (int i = 0; i < moviesArray.length(); i++) {
+
+                // Get the JSON object representing the movie
+                JSONObject video = moviesArray.getJSONObject(i);
+
+                String videoId = video.getString(TMDB_ID);
+                String iso = video.getString(TMDB_ISO);
+                String key = video.getString(TMDB_KEY);
+                String name = video.getString(TMBD_NAME);
+                String site = video.getString(TMDB_SITE);
+                String size = video.getString(TMDB_SIZE);
+                String type = video.getString(TMDB_TYPE);
+
+                videoValues.put(MovieContract.VideoEntry._ID, videoId);
+                videoValues.put(MovieContract.VideoEntry.COLUMN_MOVIE_KEY, movieKey);
+                videoValues.put(MovieContract.VideoEntry.COLUMN_ISO, iso);
+                videoValues.put(MovieContract.VideoEntry.COLUMN_KEY, key);
+                videoValues.put(MovieContract.VideoEntry.COLUMN_NAME, name);
+                videoValues.put(MovieContract.VideoEntry.COLUMN_SITE, site);
+                videoValues.put(MovieContract.VideoEntry.COLUMN_SIZE, size);
+                videoValues.put(MovieContract.VideoEntry.COLUMN_TYPE, type);
+            }
+
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, e.getMessage(), e);
+            e.printStackTrace();
+        }
+
+        return videoValues;
     }
 }
