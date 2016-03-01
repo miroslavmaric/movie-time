@@ -8,7 +8,9 @@ import android.test.AndroidTestCase;
 public class TestMovieContract extends AndroidTestCase {
 
     // intentionally includes a slash to make sure Uri is getting quoted correctly
-    private static final String TEST_MOVIE_LOCATION = "/Imagine";
+    private static final String TEST_MOVIE_ID= "/550";
 
-    // TODO: Test build movie uri
+    public void testBuildMovie() {
+
+    }
 }

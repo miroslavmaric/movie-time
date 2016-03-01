@@ -140,6 +140,10 @@ public class MovieContract {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
+        public static Uri buildVideoWithMovieId(long movieId) {
+            return CONTENT_URI.buildUpon().appendPath(Long.toString(movieId)).build();
+        }
+
         public static long getMovieIdFromURI(Uri uri) {
             long movieId = Long.parseLong(uri.getLastPathSegment());
             return movieId;

@@ -20,7 +20,7 @@ public class TestUtilities extends AndroidTestCase {
     static ContentValues createImaginaryMovieValues() {
         // Create a new map of values, where column names are the keys
         ContentValues testValues = new ContentValues();
-        testValues.put(MovieContract.MovieEntry.COLUMN_MOVIE_ID, 12412);
+        testValues.put(MovieContract.MovieEntry._ID, 12412);
         testValues.put(MovieContract.MovieEntry.COLUMN_TITLE, "Imagine");
         testValues.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE, "Imaginary Movie");
         testValues.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_LANGUAGE, "en");
@@ -32,6 +32,20 @@ public class TestUtilities extends AndroidTestCase {
         testValues.put(MovieContract.MovieEntry.COLUMN_POSTER_PATH, "thepath");
         testValues.put(MovieContract.MovieEntry.COLUMN_ADULT, 0);
         testValues.put(MovieContract.MovieEntry.COLUMN_VIDEO, 0);
+
+        return testValues;
+    }
+
+    static ContentValues createVideoValues(long movieRowId) {
+        ContentValues testValues = new ContentValues();
+        testValues.put(MovieContract.VideoEntry._ID, 12321);
+        testValues.put(MovieContract.VideoEntry.COLUMN_MOVIE_KEY, movieRowId);
+        testValues.put(MovieContract.VideoEntry.COLUMN_ISO, "en");
+        testValues.put(MovieContract.VideoEntry.COLUMN_KEY, "12xf42");
+        testValues.put(MovieContract.VideoEntry.COLUMN_NAME, "Some Trailer");
+        testValues.put(MovieContract.VideoEntry.COLUMN_SITE, "Youtube");
+        testValues.put(MovieContract.VideoEntry.COLUMN_SIZE, "1020p");
+        testValues.put(MovieContract.VideoEntry.COLUMN_TYPE, "trailer");
 
         return testValues;
     }

@@ -12,6 +12,7 @@ import android.test.AndroidTestCase;
 import android.util.Log;
 
 import com.nightsparrow.movietime.data.MovieContract.MovieEntry;
+import com.nightsparrow.movietime.data.MovieContract.VideoEntry;
 
 /**
  * Created by Miroslav Maric on 2/11/2016.
@@ -28,6 +29,11 @@ public class TestProvider extends AndroidTestCase {
     */
     public void deleteAllRecordsFromProvider() {
         mContext.getContentResolver().delete(
+                VideoEntry.CONTENT_URI,
+                null,
+                null
+        );
+        mContext.getContentResolver().delete(
                 MovieEntry.CONTENT_URI,
                 null,
                 null
@@ -40,11 +46,21 @@ public class TestProvider extends AndroidTestCase {
                 null,
                 null
         );
-        assertEquals("Error: Records not deleted from Weather table during delete", 0, cursor.getCount());
+        assertEquals("Error: Records not deleted from Movie table during delete", 0, cursor.getCount());
+        cursor.close();
+
+        cursor = mContext.getContentResolver().query(
+                VideoEntry.CONTENT_URI,
+                null,
+                null,
+                null,
+                null
+        );
+        assertEquals("Error: Records not deleted from Video table during delete", 0, cursor.getCount());
         cursor.close();
     }
 
-    // Since we want each test to start with a clean slate, run deleteAllRecords
+    // Start each test with a clean slate: run deleteAllRecords
     // in setUp (called by the test runner before each test).
     @Override
     protected void setUp() throws Exception {
@@ -77,7 +93,7 @@ public class TestProvider extends AndroidTestCase {
     }
 
     public void testGetType() {
-        // content://com.nightsparrow.movietimep/movie/
+        // content://com.nightsparrow.movietime/movie/
         String type = mContext.getContentResolver().getType(MovieContract.MovieEntry.CONTENT_URI);
         // vnd.android.cursor.dir/com.nightsparrow.movietimep/movie/
         assertEquals("Error: the MovieEntry CONTENT_URI should return MovieEntry.CONTENT_TYPE",
@@ -87,9 +103,20 @@ public class TestProvider extends AndroidTestCase {
         // content://com.nightsparrow.movietimep/movie/94074
         type = mContext.getContentResolver().getType(
                 MovieEntry.buildMovieWithMovieId(testMovieId));
-        // vnd.android.cursor.dir/com.nightsparrow.movietimep/movie/
+        // vnd.android.cursor.dir/com.nightsparrow.movietime/movie/
         assertEquals("Error: the MovieEntry CONTENT_URI with movie id should return MovieEntry.CONTENT_ITEM_TYPE",
                 MovieEntry.CONTENT_ITEM_TYPE, type);
+
+        // content://com.nightsparrow.movietime/video/
+        type = mContext.getContentResolver().getType(MovieContract.VideoEntry.CONTENT_URI);
+        assertEquals("Error: the VideoEntry CONTENT_URI should return VideoEntry.CONTENT_TYPE",
+                VideoEntry.CONTENT_TYPE, type);
+
+        // content://com.nightsparrow.movietimep/movie/94074
+        type = mContext.getContentResolver().getType(
+                VideoEntry.buildVideoWithMovieId(testMovieId));
+        assertEquals("Error: the VideoEntry CONTENT_URI with movie id should return VideoEntry.CONTENT_TYPE",
+                VideoEntry.CONTENT_TYPE, type);
     }
 
     public void testBasicMovieQuery() {
@@ -126,26 +153,25 @@ public class TestProvider extends AndroidTestCase {
     public void testInsertReadProvider() {
         ContentValues testValues = TestUtilities.createImaginaryMovieValues();
 
-        // Register a content observer for our insert.  This time, directly with the content resolver
+        // Register a content observer for insert.  This time, directly with the content resolver
         TestUtilities.TestContentObserver movieObserver = TestUtilities.getTestContentObserver();
         mContext.getContentResolver().registerContentObserver(MovieEntry.CONTENT_URI, true, movieObserver);
 
         Uri movieUri = mContext.getContentResolver().insert(MovieEntry.CONTENT_URI, testValues);
 
-        // Did our content observer get called?  Students:  If this fails, your insert location
-        // isn't calling getContext().getContentResolver().notifyChange(uri, null);
+        // Did content observer get called?
         movieObserver.waitForNotificationOrFail();
         mContext.getContentResolver().unregisterContentObserver(movieObserver);
 
         long movieRowId = ContentUris.parseId(movieUri);
 
-        // Verify we got a row back.
+        // Verify that ID is valid.
         assertTrue(movieRowId != -1);
 
-        // Data is, theoretically, inserted. {ull some out to stare at it and verify it made
+        // Data is, theoretically, inserted. {pull some out to stare at it and verify it made
         // the round trip.
 
-        Cursor cursor = mContext.getContentResolver().query(
+        Cursor MovieCursor = mContext.getContentResolver().query(
                 MovieEntry.CONTENT_URI,
                 null, // leaving "columns" null just returns all the columns.
                 null, // cols for "where" clause
@@ -154,9 +180,34 @@ public class TestProvider extends AndroidTestCase {
         );
 
         TestUtilities.validateCursor("testInsertReadProvider. Error validating MovieEntry.",
-                cursor, testValues);
+                MovieCursor, testValues);
 
-        cursor.close();
+        MovieCursor.close();
+
+
+        // Add videos
+        ContentValues videoValues = TestUtilities.createVideoValues(movieRowId);
+        TestUtilities.TestContentObserver videoObserver = TestUtilities.getTestContentObserver();
+        mContext.getContentResolver().registerContentObserver(VideoEntry.CONTENT_URI, true, videoObserver);
+
+        Uri videoInsertUri = mContext.getContentResolver()
+                .insert(VideoEntry.CONTENT_URI, videoValues);
+        assertTrue(videoInsertUri != null);
+
+        videoObserver.waitForNotificationOrFail();
+        mContext.getContentResolver().unregisterContentObserver(videoObserver);
+
+        Cursor videoCursor = mContext.getContentResolver().query(
+                VideoEntry.CONTENT_URI,
+                null,
+                null,
+                null,
+                null
+        );
+
+        TestUtilities.validateCursor("testInsertReadProvider. Error validating VideoEntry insert.",
+                videoCursor, videoValues);
+        videoCursor.close();
     }
 
     public void testUpdateMovie() {
@@ -252,7 +303,7 @@ public class TestProvider extends AndroidTestCase {
 
         for ( int i = 0; i < BULK_INSERT_RECORDS_TO_INSERT; ++i, currentMovieId+= 1 ) {
             ContentValues movieValues = new ContentValues();
-            movieValues.put(MovieEntry.COLUMN_MOVIE_ID, currentMovieId);
+            movieValues.put(MovieEntry._ID, currentMovieId);
             movieValues.put(MovieContract.MovieEntry.COLUMN_TITLE, "Some movie title");
             movieValues.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE, "Original  movie title");
             movieValues.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_LANGUAGE, "en");
@@ -276,9 +327,16 @@ public class TestProvider extends AndroidTestCase {
         TestUtilities.TestContentObserver movieObserver = TestUtilities.getTestContentObserver();
         mContext.getContentResolver().registerContentObserver(MovieEntry.CONTENT_URI, true, movieObserver);
 
+        // Register a content observer for video delete.
+        TestUtilities.TestContentObserver videoObserver = TestUtilities.getTestContentObserver();
+        mContext.getContentResolver().registerContentObserver(VideoEntry.CONTENT_URI, true, videoObserver);
+
         deleteAllRecordsFromProvider();
+
         movieObserver.waitForNotificationOrFail();
+        videoObserver.waitForNotificationOrFail();
 
         mContext.getContentResolver().unregisterContentObserver(movieObserver);
+        mContext.getContentResolver().unregisterContentObserver(videoObserver);
     }
 }
