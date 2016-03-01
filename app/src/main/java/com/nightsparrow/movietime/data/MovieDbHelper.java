@@ -57,7 +57,7 @@ public class MovieDbHelper extends SQLiteOpenHelper {
                 " );";
 
         sqLiteDatabase.execSQL(SQL_CREATE_MOVIE_TABLE);
-        //sqLiteDatabase.execSQL(SQL_CREATE_VIDEO_TABLE);
+        sqLiteDatabase.execSQL(SQL_CREATE_VIDEO_TABLE);
     }
 
     @Override

@@ -140,6 +140,10 @@ public class MovieContract {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
+        public static long getMovieIdFromURI(Uri uri) {
+            long movieId = Long.parseLong(uri.getLastPathSegment());
+            return movieId;
+        }
     }
 
 }

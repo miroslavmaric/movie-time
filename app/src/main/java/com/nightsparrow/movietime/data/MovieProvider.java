@@ -17,12 +17,16 @@ public class MovieProvider extends ContentProvider {
 
     static final int MOVIE = 100;
     static final int MOVIE_WITH_MOVIE_ID = 101;
+
     static final int VIDEO = 200;
-    static final int VIDEO_WITH_VIDEO_ID = 201;
-    static final int VIDEO_WITH_MOVIE_ID = 202;
+    static final int VIDEO_WITH_MOVIE_ID = 201;
 
     private static final String sMovieIdSelection =
             MovieContract.MovieEntry.TABLE_NAME + "." + MovieContract.MovieEntry._ID + " = ? ";
+
+    private static final String sVideoByMovieIdSelection =
+            MovieContract.VideoEntry.TABLE_NAME + "." +
+                    MovieContract.VideoEntry.COLUMN_MOVIE_KEY + " = ? ";
 
     static UriMatcher buildUriMatcher() {
 
@@ -37,6 +41,7 @@ public class MovieProvider extends ContentProvider {
         matcher.addURI(authority, MovieContract.PATH_MOVIE + "/#", MOVIE_WITH_MOVIE_ID);
 
         matcher.addURI(authority, MovieContract.PATH_VIDEO, VIDEO);
+        matcher.addURI(authority, MovieContract.PATH_VIDEO + "/#", VIDEO_WITH_MOVIE_ID);
 
         return matcher;
     }
@@ -59,6 +64,10 @@ public class MovieProvider extends ContentProvider {
                 return MovieContract.MovieEntry.CONTENT_TYPE;
             case MOVIE_WITH_MOVIE_ID:
                 return MovieContract.MovieEntry.CONTENT_ITEM_TYPE;
+            case VIDEO:
+                return MovieContract.VideoEntry.CONTENT_TYPE;
+            case VIDEO_WITH_MOVIE_ID:
+                return MovieContract.VideoEntry.CONTENT_TYPE;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -84,8 +93,27 @@ public class MovieProvider extends ContentProvider {
                 );
                 break;
             }
+            // "movie/#"
             case MOVIE_WITH_MOVIE_ID: {
                 retCursor = getMovieByMovieId(uri, projection, sortOrder);
+                break;
+            }
+            // "video"
+            case VIDEO: {
+                retCursor = mOpenHelper.getReadableDatabase().query(
+                        MovieContract.VideoEntry.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder
+                );
+                break;
+            }
+            // "movie/#"
+            case VIDEO_WITH_MOVIE_ID: {
+                retCursor = getVideoByMovieID(uri, projection, sortOrder);
                 break;
             }
             default:
@@ -110,6 +138,21 @@ public class MovieProvider extends ContentProvider {
         );
     }
 
+    private Cursor getVideoByMovieID(
+            Uri uri, String[] projection, String sortOrder) {
+        long movieId = MovieContract.VideoEntry.getMovieIdFromURI(uri);
+
+        return mOpenHelper.getReadableDatabase().query(
+                MovieContract.VideoEntry.TABLE_NAME,
+                projection,
+                sVideoByMovieIdSelection,
+                new String[]{Long.toString(movieId)},
+                null,
+                null,
+                sortOrder
+        );
+    }
+
 
     @Override
     public Uri insert(Uri uri, ContentValues values) {
@@ -119,41 +162,24 @@ public class MovieProvider extends ContentProvider {
 
         switch (match) {
             case MOVIE: {
-                // check if movie already exists in the database
-                long movieId = values.getAsLong(MovieContract.MovieEntry._ID);
-                int rowsUpdated = db.update(MovieContract.MovieEntry.TABLE_NAME,
-                        values,
-                        MovieContract.MovieEntry._ID + " = ?",
-                        new String[]{String.valueOf(movieId)});
-                if (rowsUpdated > 0) {
-                    // get the uri
-                    Cursor cursor = mOpenHelper.getReadableDatabase().query(
-                            MovieContract.MovieEntry.TABLE_NAME,
-                            null,
-                            MovieContract.MovieEntry._ID + " = ?",
-                            new String[]{String.valueOf(movieId)},
-                            null,
-                            null,
-                            null
-                    );
-
-                    long _id = -1;
-                    if(cursor.moveToFirst())
-                        _id = cursor.getLong(cursor.getColumnIndex(MovieContract.MovieEntry._ID));
-                     else
-                        throw new android.database.SQLException("Failed to insert row into " + uri);
-
-                    cursor.close();
-
+                // if movie does not already exist in the database, insert a new one
+                // else, update the existing one
+                long _id = db.insertWithOnConflict(MovieContract.MovieEntry.TABLE_NAME,
+                        null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                if (_id > 0)
                     returnUri = MovieContract.MovieEntry.buildMovieUri(_id);
-                } else {
-                    // the move does not already exist in the database
-                    long _id = db.insert(MovieContract.MovieEntry.TABLE_NAME, null, values);
-                    if (_id > 0)
-                        returnUri = MovieContract.MovieEntry.buildMovieUri(_id);
-                    else
-                        throw new android.database.SQLException("Failed to insert row into " + uri);
-                }
+                else
+                    throw new android.database.SQLException("Failed to insert row into " + uri);
+
+                break;
+            }
+            case VIDEO: {
+                long _id = db.insertWithOnConflict(MovieContract.VideoEntry.TABLE_NAME,
+                        null, values, SQLiteDatabase.CONFLICT_REPLACE);
+                if ( _id > 0 )
+                    returnUri = MovieContract.VideoEntry.buildVideoURI(_id);
+                else
+                    throw new android.database.SQLException("Failed to insert row into " + uri);
                 break;
             }
             default:
@@ -175,10 +201,13 @@ public class MovieProvider extends ContentProvider {
                 rowsDeleted = db.delete(
                         MovieContract.MovieEntry.TABLE_NAME, selection, selectionArgs);
                 break;
+            case VIDEO:
+                rowsDeleted = db.delete(
+                        MovieContract.VideoEntry.TABLE_NAME, selection, selectionArgs);
+                break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
-        // Because a null deletes all rows
         if (rowsDeleted != 0) {
             getContext().getContentResolver().notifyChange(uri, null);
         }
@@ -197,6 +226,10 @@ public class MovieProvider extends ContentProvider {
                 rowsUpdated = db.update(MovieContract.MovieEntry.TABLE_NAME, values, selection,
                         selectionArgs);
                 break;
+            case VIDEO:
+                rowsUpdated = db.update(MovieContract.VideoEntry.TABLE_NAME, values, selection,
+                        selectionArgs);
+                break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -213,23 +246,13 @@ public class MovieProvider extends ContentProvider {
         switch (match) {
             case MOVIE:
                 db.beginTransaction();
-                int returnCount = 0;
+                int movieCount = 0;
                 try {
                     for (ContentValues value : values) {
-                        // check if movie already exists in the database
-                        long movieId = value.getAsLong(MovieContract.MovieEntry._ID);
-                        int rowsUpdated = db.update(MovieContract.MovieEntry.TABLE_NAME,
-                                value,
-                                MovieContract.MovieEntry._ID + " = ?",
-                                new String[]{String.valueOf(movieId)});
-                        if (rowsUpdated > 0) {
-                            returnCount+=rowsUpdated;
-                        } else {
-                            // if not, insert new movie
-                            long _id = db.insert(MovieContract.MovieEntry.TABLE_NAME, null, value);
-                            if (_id != -1) {
-                                returnCount++;
-                            }
+                        long _id = db.insertWithOnConflict(MovieContract.MovieEntry.TABLE_NAME,
+                                null, value, SQLiteDatabase.CONFLICT_REPLACE);
+                        if (_id != -1) {
+                            movieCount++;
                         }
                     }
                     db.setTransactionSuccessful();
@@ -237,7 +260,24 @@ public class MovieProvider extends ContentProvider {
                     db.endTransaction();
                 }
                 getContext().getContentResolver().notifyChange(uri, null);
-                return returnCount;
+                return movieCount;
+            case VIDEO:
+                db.beginTransaction();
+                int videoCount = 0;
+                try {
+                    for (ContentValues value : values) {
+                        long _id = db.insertWithOnConflict(MovieContract.VideoEntry.TABLE_NAME,
+                                null, value, SQLiteDatabase.CONFLICT_REPLACE);
+                        if (_id != -1) {
+                            videoCount++;
+                        }
+                    }
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+                getContext().getContentResolver().notifyChange(uri, null);
+                return videoCount;
             default:
                 return super.bulkInsert(uri, values);
         }
