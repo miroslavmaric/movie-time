@@ -13,7 +13,7 @@ import com.nightsparrow.movietime.data.MovieContract.VideoEntry;
 public class MovieDbHelper extends SQLiteOpenHelper {
 
     // If one changes the database schema, one must increment the database version.
-    private static final int DATABASE_VERSION = 7;
+    private static final int DATABASE_VERSION = 8;
 
     static final String DATABASE_NAME = "movie.db";
 
@@ -40,7 +40,7 @@ public class MovieDbHelper extends SQLiteOpenHelper {
                 " );";
 
         final  String SQL_CREATE_VIDEO_TABLE = "CREATE TABLE " + VideoEntry.TABLE_NAME + " (" +
-                VideoEntry._ID + " INTEGER PRIMARY KEY, " +
+                VideoEntry._ID + " TEXT PRIMARY KEY, " +
 
                 // the ID of the video entry associated with this video
                 VideoEntry.COLUMN_MOVIE_KEY + " INTEGER NOT NULL, " +

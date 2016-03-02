@@ -10,7 +10,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -105,7 +104,7 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
         GridView gridView = (GridView) rootView.findViewById(R.id.grid_view);
         gridView.setAdapter(mMoviesAdapter);
 
-        // We'll call our MainActivity
+        // We'll call MainActivity
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
@@ -165,14 +164,6 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
 
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
-        // Check cursor content
-            while (cursor.moveToNext())
-            {
-                String title = cursor.getString(1);
-                Log.v(LOG_TAG, "movie title: " + title);
-
-            }
-
         mMoviesAdapter.swapCursor(cursor);
     }
 

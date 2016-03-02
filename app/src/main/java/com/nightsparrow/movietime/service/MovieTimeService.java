@@ -285,7 +285,7 @@ public class MovieTimeService extends IntentService {
 
             videosJsonStr = buffer.toString();
 
-            Log.v(LOG_TAG, "Data: " + videosJsonStr);
+            // Log.v(LOG_TAG, "Data: " + videosJsonStr);
 
         } catch (IOException e) {
             Log.e(LOG_TAG, "IO Error: " + e);
