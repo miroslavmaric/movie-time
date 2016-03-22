@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/grid_item"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/grid_poster"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_gravity="center"
+        android:layout_weight="1"/>
+
+
+    <!--TODO: Implement favorite button -->
+    <!--<ToggleButton-->
+        <!--android:id="@+id/btn_toggle_favorite"-->
+        <!--android:background="@drawable/selector_favorite"-->
+        <!--android:layout_width="30dp"-->
+        <!--android:layout_height="30dp"-->
+        <!--android:textOn="@null"-->
+        <!--android:textOff="@null"-->
+        <!--android:textSize="0dp"-->
+        <!--android:layout_gravity="center"-->
+        <!--android:layout_weight="1"/>-->
+
+</LinearLayout>

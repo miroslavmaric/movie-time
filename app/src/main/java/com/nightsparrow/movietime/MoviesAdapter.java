@@ -4,10 +4,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.v4.widget.CursorAdapter;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 
 import com.nightsparrow.movietime.data.MovieContract;
 import com.squareup.picasso.Picasso;
@@ -38,11 +39,7 @@ public class MoviesAdapter extends CursorAdapter {
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
 
-        //View view = LayoutInflater.from(context).inflate(R.layout.list_item_movie, parent, false);
-
-        ImageView view = new ImageView(context);
-        view.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        view.setLayoutParams(new GridView.LayoutParams(300, 300));
+        View view = LayoutInflater.from(context).inflate(R.layout.grid_item_movie, parent, false);
 
         return view;
     }
@@ -53,10 +50,11 @@ public class MoviesAdapter extends CursorAdapter {
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
         // Simple (and slow!) binding.
-        //TextView tv = (TextView)view;
-        //tv.setText(convertCursorRowToUXFormat(cursor));
 
-        ImageView iv = (ImageView)view;
+        ImageView iv = (ImageView) view.findViewById(R.id.grid_poster);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.MATCH_PARENT);
+        iv.setLayoutParams(params);
 
         // Build the image url
         final String TMD_BASE = "http://image.tmdb.org/t/p/";

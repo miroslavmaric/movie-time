@@ -10,6 +10,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -109,6 +110,7 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
 
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                Log.v(LOG_TAG, "View clicked: " + getResources().getResourceEntryName(view.getId()));
                 // CursorAdapter returns a cursor at the correct position for getItem(), or null
                 // if it cannot seek to that position.
                 Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);

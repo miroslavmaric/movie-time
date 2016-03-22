@@ -1,6 +1,7 @@
 package com.nightsparrow.movietime;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -17,6 +18,8 @@ import android.widget.TextView;
 
 import com.nightsparrow.movietime.data.MovieContract;
 import com.squareup.picasso.Picasso;
+
+import java.util.List;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -46,11 +49,11 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
             MovieContract.VideoEntry.COLUMN_KEY,
     };
 
-    // these constants correspond to the projection defined above, and must change if the
+    // These constants correspond to the projection defined above, and must change if the
     // projection changes
     private static final int COL_MOVIE_ID = 0;
     private static final int COL_MOVIE_TITLE = 1;
-    private static final int COL_MOVIE_IVERVIEW = 2;
+    private static final int COL_MOVIE_OVERVIEW = 2;
     private static final int COL_MOVIE_RELEASE_DATE = 3;
     private static final int COL_MOVIE_POPULARITY = 4;
     private static final int COL_VOTE_AVERAGE = 5;
@@ -131,14 +134,20 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
         switch (id) {
             case DETAIL_LOADER:
                 String title = data.getString(COL_MOVIE_TITLE);
-                double popularity = data.getDouble(COL_MOVIE_POPULARITY);
-                double rating = data.getDouble(COL_VOTE_AVERAGE);
-                mMoviesString = String.format("%s \n %f \n %f", title, popularity, rating);
+                String date = data.getString(COL_MOVIE_RELEASE_DATE);
+                String overview = data.getString(COL_MOVIE_OVERVIEW);
+                mMoviesString = String.format("%s %s %s", title, date, overview);
 
-                TextView detailTextView = (TextView) getView().findViewById(R.id.text_view_detail);
-                detailTextView.setText(mMoviesString);
+                TextView tvTitle = (TextView) getView().findViewById(R.id.text_view_title);
+                tvTitle.setText(title);
 
-                ImageView iv = (ImageView) getView().findViewById(R.id.image_view_detail);
+                TextView tvDate = (TextView) getView().findViewById(R.id.text_view_date);
+                tvDate.setText(date);
+
+                TextView tvOverview = (TextView) getView().findViewById(R.id.text_view_overview);
+                tvOverview.setText(overview);
+
+                ImageView iv = (ImageView) getView().findViewById(R.id.image_view_poster);
 
                 // Build the image url
                 final String TMD_BASE = "http://image.tmdb.org/t/p/";
@@ -154,20 +163,48 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
                 // Use Picasso to fetch the image from the web and load it into image view
                 Picasso.with(getContext()).load(posterUri).into(iv);
                 break;
+
             case VIDEO_LOADER:
-                TextView textViewVideo = (TextView) getView().findViewById(R.id.text_view_video);
+                //ListView listViewVideo = (ListView) getView().findViewById(R.id.list_view_video);
 
                 do {
                     // Build the video uri
                     final String YOUTUBE_BASE = "https://www.youtube.com/watch";
                     final String YOUTUBE_KEY = "v";
 
-                    Uri videoUri = Uri.parse(YOUTUBE_BASE).buildUpon()
+                    final Uri videoUri = Uri.parse(YOUTUBE_BASE).buildUpon()
                             .appendQueryParameter(YOUTUBE_KEY, data.getString(COL_VIDEO_KEY))
                             .build();
 
-                    textViewVideo.append(videoUri.toString());
-                    Log.v(LOG_TAG, "Video link " + videoUri);
+
+                    final String THUMBNAIL_BASE = "http://img.youtube.com/vi";
+                    final Uri imageUri = Uri.parse(THUMBNAIL_BASE).buildUpon()
+                            .appendPath(data.getString(COL_VIDEO_KEY))
+                            .appendPath("0.jpg")
+                            .build();
+
+                    Log.v(LOG_TAG, "Thumbnail link " + imageUri);
+
+                    //ImageView ivv = new ImageView(getContext());
+                    ImageView ivv = (ImageView) getView().findViewById(R.id.image_view_video);
+                    Picasso.with(getContext()).load(imageUri).into(ivv);
+
+                    // Add listener ...
+                    ivv.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Intent youtubeIntent = new Intent(Intent.ACTION_VIEW, videoUri);
+                            PackageManager packageManager = getContext().getPackageManager();
+                            List activities = packageManager.queryIntentActivities(youtubeIntent,
+                                    PackageManager.MATCH_DEFAULT_ONLY);
+                            if (activities.size() > 0) {
+                                startActivity(youtubeIntent);
+                            } else {
+                                // disable the video viewing ...
+                            }
+                        }
+                    });
+                    //listViewVideo.addView(ivv);
 
                 } while (data.moveToNext());
                 break;
