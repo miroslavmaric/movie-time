@@ -1,5 +1,8 @@
-<fragment xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:id="@+id/fragment"
-    android:name="com.nightsparrow.movietime.DetailActivityFragment"
-    tools:layout="@layout/fragment_detail" android:layout_width="match_parent"
-    android:layout_height="match_parent" />
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/movie_detail_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:name="com.nightsparrow.movietime.DetailActivity"
+    tools:ignore="MergeRootPane" />
+

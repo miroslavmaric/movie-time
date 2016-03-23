@@ -24,9 +24,9 @@ import java.util.List;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class DetailActivityFragment extends Fragment implements LoaderCallbacks<Cursor> {
+public class DetailFragment extends Fragment implements LoaderCallbacks<Cursor> {
 
-    private static final String LOG_TAG = DetailActivityFragment.class.getSimpleName();
+    private static final String LOG_TAG = DetailFragment.class.getSimpleName();
 
     private static final int DETAIL_LOADER = 0;
     private static final int VIDEO_LOADER = 1;
@@ -67,7 +67,7 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
 
     private String mMoviesString;
 
-    public DetailActivityFragment() {
+    public DetailFragment() {
     }
 
     @Override
@@ -87,10 +87,14 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-
         Log.v(LOG_TAG, "In onCreateLoader");
         Intent intent = getActivity().getIntent();
-        if (intent == null) {
+        if (intent == null || intent.getData() == null) {
+            // DetailFragment can exist within MainActivity,
+            // and MainActivity is not launched with detail data,
+            // where DetailActivity would be launched with detail data
+
+            // Fall back to some (pre-existing, in xml) placeholder data
             return null;
         }
 
@@ -128,7 +132,9 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        if (!data.moveToFirst()) { return; }
+        if (!data.moveToFirst()) {
+            return;
+        }
 
         int id = loader.getId();
         switch (id) {
@@ -212,6 +218,7 @@ public class DetailActivityFragment extends Fragment implements LoaderCallbacks<
     }
 
     @Override
-    public void onLoaderReset(Loader<Cursor> loader) { }
+    public void onLoaderReset(Loader<Cursor> loader) {
+    }
 
 }

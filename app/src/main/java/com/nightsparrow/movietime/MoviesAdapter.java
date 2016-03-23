@@ -51,7 +51,7 @@ public class MoviesAdapter extends CursorAdapter {
     public void bindView(View view, Context context, Cursor cursor) {
         // Simple (and slow!) binding.
 
-        ImageView iv = (ImageView) view.findViewById(R.id.grid_poster);
+        ImageView iv = (ImageView) view.findViewById(R.id.movie_poster);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT);
         iv.setLayoutParams(params);
