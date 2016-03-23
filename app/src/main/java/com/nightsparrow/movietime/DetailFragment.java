@@ -27,6 +27,9 @@ import java.util.List;
 public class DetailFragment extends Fragment implements LoaderCallbacks<Cursor> {
 
     private static final String LOG_TAG = DetailFragment.class.getSimpleName();
+    static final String DETAIL_URI = "URI";
+
+    private Uri mMovieUri;
 
     private static final int DETAIL_LOADER = 0;
     private static final int VIDEO_LOADER = 1;
@@ -73,6 +76,11 @@ public class DetailFragment extends Fragment implements LoaderCallbacks<Cursor> 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        Bundle arguments = getArguments();
+        if (arguments != null) {
+            mMovieUri = arguments.getParcelable(DetailFragment.DETAIL_URI);
+        }
+
         View root = inflater.inflate(R.layout.fragment_detail, container, false);
 
         return root;
@@ -87,47 +95,38 @@ public class DetailFragment extends Fragment implements LoaderCallbacks<Cursor> 
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Log.v(LOG_TAG, "In onCreateLoader");
-        Intent intent = getActivity().getIntent();
-        if (intent == null || intent.getData() == null) {
-            // DetailFragment can exist within MainActivity,
-            // and MainActivity is not launched with detail data,
-            // where DetailActivity would be launched with detail data
+        if ( null != mMovieUri) {
+            switch (id) {
+                case DETAIL_LOADER:
+                    // Create and return a CursorLoader that will take care of
+                    // creating a Cursor for the data being displayed.
+                    CursorLoader detailLoader = new CursorLoader(
+                            getActivity(),
+                            mMovieUri,
+                            MOVIE_COLUMNS,
+                            null,
+                            null,
+                            null
+                    );
+                    return detailLoader;
+                case VIDEO_LOADER:
+                    long movieId = MovieContract.MovieEntry.getMovieIdFromUri(mMovieUri);
+                    Uri videoUri = MovieContract.VideoEntry.buildVideoWithMovieId(movieId);
+                    CursorLoader videoLoader = new CursorLoader(
+                            getActivity(),
+                            videoUri,
+                            VIDEO_COLUMNS,
+                            null,
+                            null,
+                            null
+                    );
+                    return videoLoader;
+                default:
+                    return null;
 
-            // Fall back to some (pre-existing, in xml) placeholder data
-            return null;
+            }
         }
-
-        Uri movieUri = intent.getData();
-        switch (id) {
-            case DETAIL_LOADER:
-                // Create and return a CursorLoader that will take care of
-                // creating a Cursor for the data being displayed.
-                CursorLoader detailLoader = new CursorLoader(
-                        getActivity(),
-                        movieUri,
-                        MOVIE_COLUMNS,
-                        null,
-                        null,
-                        null
-                );
-                return detailLoader;
-            case VIDEO_LOADER:
-                long movieId = MovieContract.MovieEntry.getMovieIdFromUri(movieUri);
-                Uri videoUri = MovieContract.VideoEntry.buildVideoWithMovieId(movieId);
-                CursorLoader videoLoader = new CursorLoader(
-                        getActivity(),
-                        videoUri,
-                        VIDEO_COLUMNS,
-                        null,
-                        null,
-                        null
-                );
-                return videoLoader;
-            default:
-                return null;
-
-        }
+        return null;
     }
 
     @Override
