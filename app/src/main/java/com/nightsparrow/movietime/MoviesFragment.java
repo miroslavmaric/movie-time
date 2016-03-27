@@ -131,9 +131,6 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
             }
         });
 
-        // what did we get
-        //getContext().getContentResolver().get
-
         return rootView;
     }
 

@@ -9,6 +9,9 @@
     android:gravity="center"
     android:stretchMode="columnWidth"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
+    android:layout_height="fill_parent"
+    android:drawSelectorOnTop="true"
+    android:listSelector="@drawable/touch_selector"
+    style="@style/MoviesGridStyle">
 
 </GridView>
