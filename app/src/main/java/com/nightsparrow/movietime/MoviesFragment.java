@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.ListView;
 
 import com.nightsparrow.movietime.data.MovieContract;
 import com.nightsparrow.movietime.service.MovieTimeService;
@@ -28,6 +29,11 @@ import com.nightsparrow.movietime.service.MovieTimeService;
 public class MoviesFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private final String LOG_TAG =  MoviesFragment.class.getSimpleName();
+
+     private GridView mGridView;
+     private int mPosition = GridView.INVALID_POSITION;
+
+    private static final String SELECTED_KEY = "selected_position";
 
     private static final int MOVIES_LOADER = 0;
     // Specify which columns are used in the UI
@@ -108,16 +114,16 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        // The CursorAdapter will take data from our cursor and populate the ListView.
+        // The CursorAdapter will take data from our cursor and populate the GridView.
         mMoviesAdapter = new MoviesAdapter(getActivity(), null, 0);
 
         View rootView = inflater.inflate(R.layout.fragment_movies, container, false);
 
-        GridView gridView = (GridView) rootView.findViewById(R.id.grid_view);
-        gridView.setAdapter(mMoviesAdapter);
+        mGridView = (GridView) rootView.findViewById(R.id.grid_view);
+        mGridView.setAdapter(mMoviesAdapter);
 
         // We'll call MainActivity
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
@@ -128,8 +134,16 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
                     ((Callback) getActivity())
                             .onItemSelected(MovieContract.MovieEntry.buildMovieUri(cursor.getLong(COL_ID)));
                 }
+                mPosition = position;
             }
         });
+
+        // If there's instance state, mine it for useful information.
+        if (savedInstanceState != null && savedInstanceState.containsKey(SELECTED_KEY)) {
+            // The GridView probably hasn't even been populated yet. Perform the
+            // swapout in onLoadFinished.
+            mPosition = savedInstanceState.getInt(SELECTED_KEY);
+        }
 
         return rootView;
     }
@@ -138,6 +152,17 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
     public void onActivityCreated(Bundle savedInstanceState) {
         getLoaderManager().initLoader(MOVIES_LOADER, null, this);
         super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        // When tablets rotate, the currently selected grid item needs to be saved.
+        // When no item is selected, mPosition will be set to GridView.INVALID_POSITION,
+        // so check for that before storing.
+        if (mPosition != GridView.INVALID_POSITION) {
+            outState.putInt(SELECTED_KEY, mPosition);
+        }
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -173,6 +198,14 @@ public class MoviesFragment extends Fragment implements LoaderManager.LoaderCall
     @Override
     public void onLoadFinished(Loader<Cursor> cursorLoader, Cursor cursor) {
         mMoviesAdapter.swapCursor(cursor);
+        if (mPosition != ListView.INVALID_POSITION) {
+            // If we don't need to restart the loader, and there's a desired position to restore
+            // to, do so now.
+            mGridView.smoothScrollToPosition(mPosition);
+
+            // TODO: Set the item to be transparent after device rotation
+            mGridView.setSelection(mPosition);
+        }
     }
 
     @Override
