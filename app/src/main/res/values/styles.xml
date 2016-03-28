@@ -2,9 +2,22 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/movie_time_blue</item>
+        <item name="colorPrimaryDark">@color/movie_time_dark_blue</item>
     </style>
 
+    <!-- Main activity theme. -->
+    <style name="MovieTimeTheme" parent="AppTheme">
+        <item name="actionBarStyle">@style/ActionBar.Solid.MovieTime.NoTitle</item>
+    </style>
+
+    <!-- Main activity action bar styles -->
+    <style name="ActionBar.Solid.MovieTime.NoTitle" parent="@style/Widget.AppCompat.Light.ActionBar.Solid.Inverse">
+        <item name="displayOptions">useLogo|showHome</item>
+        <item name="logo">@drawable/ic_logo</item>
+    </style>
+
+    <!-- Style for movies gridview -->
     <style name="MoviesGridStyle">
         <!-- Here it's a stub.  In screens of sufficient width, this style includes modifications
          for two-pane layout -->
