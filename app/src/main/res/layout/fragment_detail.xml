@@ -2,48 +2,51 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:orientation="vertical"
     tools:context="com.nightsparrow.movietime.DetailFragment">
 
     <LinearLayout
-        android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:orientation="horizontal">
 
-        <ImageView android:id="@+id/image_view_poster"
+        <ImageView
+            android:id="@+id/image_view_poster"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:layout_weight="2" />
 
         <LinearLayout
-            android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/text_view_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:layout_gravity="center"
-                android:gravity="center"
+                android:layout_weight="1"
                 android:fontFamily="sans-serif-condensed"
-                android:textSize="24dp" />
+                android:gravity="center"
+                android:textAppearance="?android:textAppearanceLarge" />
 
             <TextView
                 android:id="@+id/text_view_date"
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
-                android:layout_weight="1"
                 android:layout_gravity="center"
-                android:gravity="center" />
+                android:layout_weight="1"
+                android:gravity="center"
+                android:fontFamily="sans-serif-condensed"
+                android:textAppearance="?android:textAppearanceMedium" />
         </LinearLayout>
 
     </LinearLayout>
@@ -53,14 +56,17 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
+        android:fontFamily="sans-serif-condensed"
         android:gravity="center_vertical"
         android:padding="10dp"
-        android:scrollbars = "vertical"/>
+        android:scrollbars="vertical"
+        android:textAppearance="?android:textAppearanceSmall" />
 
-    <ImageView android:id="@+id/image_view_video"
+    <ImageView
+        android:id="@+id/image_view_video"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
-        android:layout_weight="1"/>
+        android:layout_weight="1" />
 
 </LinearLayout>
