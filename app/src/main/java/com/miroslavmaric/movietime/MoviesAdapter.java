@@ -1,4 +1,4 @@
-package com.nightsparrow.movietime;
+package com.miroslavmaric.movietime;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 
-import com.nightsparrow.movietime.data.MovieContract;
+import com.miroslavmaric.movietime.data.MovieContract;
 import com.squareup.picasso.Picasso;
 
 /**

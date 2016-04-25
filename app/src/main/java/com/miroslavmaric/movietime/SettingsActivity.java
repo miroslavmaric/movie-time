@@ -1,4 +1,4 @@
-package com.nightsparrow.movietime;
+package com.miroslavmaric.movietime;
 
 import android.annotation.TargetApi;
 import android.content.Intent;

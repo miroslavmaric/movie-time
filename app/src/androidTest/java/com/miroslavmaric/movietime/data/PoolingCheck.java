@@ -1,4 +1,4 @@
-package com.nightsparrow.movietime.data;
+package com.miroslavmaric.movietime.data;
 
 import junit.framework.Assert;
 import java.util.concurrent.Callable;

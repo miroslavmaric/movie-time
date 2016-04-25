@@ -1,4 +1,4 @@
-package com.nightsparrow.movietime.data;
+package com.miroslavmaric.movietime.data;
 
 import android.test.AndroidTestCase;
 

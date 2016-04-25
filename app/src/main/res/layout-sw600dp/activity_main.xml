@@ -6,12 +6,12 @@
     android:baselineAligned="false"
     android:divider="?android:attr/dividerHorizontal"
     android:orientation="horizontal"
-    tools:context="com.nightsparrow.movietime.MainActivity">
+    tools:context="com.miroslavmaric.movietime.MainActivity">
 
 
     <fragment
         android:id="@+id/fragment_movies"
-        android:name="com.nightsparrow.movietime.MoviesFragment"
+        android:name="com.miroslavmaric.movietime.MoviesFragment"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="2"

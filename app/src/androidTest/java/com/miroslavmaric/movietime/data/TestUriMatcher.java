@@ -1,4 +1,4 @@
-package com.nightsparrow.movietime.data;
+package com.miroslavmaric.movietime.data;
 
 import android.content.UriMatcher;
 import android.net.Uri;

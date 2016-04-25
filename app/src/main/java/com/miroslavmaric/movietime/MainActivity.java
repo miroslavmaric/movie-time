@@ -1,4 +1,4 @@
-package com.nightsparrow.movietime;
+package com.miroslavmaric.movietime;
 
 import android.content.Intent;
 import android.net.Uri;

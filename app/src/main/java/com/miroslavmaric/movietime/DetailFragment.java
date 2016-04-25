@@ -1,4 +1,4 @@
-package com.nightsparrow.movietime;
+package com.miroslavmaric.movietime;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -16,7 +16,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.nightsparrow.movietime.data.MovieContract;
+import com.miroslavmaric.movietime.data.MovieContract;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;

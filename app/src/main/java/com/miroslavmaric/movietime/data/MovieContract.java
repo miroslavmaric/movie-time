@@ -1,4 +1,4 @@
-package com.nightsparrow.movietime.data;
+package com.miroslavmaric.movietime.data;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -76,7 +76,7 @@ public class MovieContract {
         // Indicates if this is an adult title
         public static final String COLUMN_ADULT = "adult";
 
-        // Indicates if this movie has type vide
+        // Indicates if this movie has type video
         public static final String COLUMN_VIDEO = "video";
 
         // Indicates if this is one of users favorite videos
@@ -100,7 +100,7 @@ public class MovieContract {
 
     /*
        Inner class that defines the contents of the videos table.
-       Each movie cah have 0 or more videos.
+       Each movie can have 0 or more videos.
      */
     public static final class VideoEntry implements BaseColumns {
 
@@ -114,7 +114,7 @@ public class MovieContract {
 
         public static final String TABLE_NAME = "video";
 
-        // ID of the movie, from themovedb
+        // ID of the movie, from themoviedb
         public static final String COLUMN_MOVIE_KEY = "id";
 
         // ISO representation of the video language

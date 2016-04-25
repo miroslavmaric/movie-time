@@ -1,11 +1,11 @@
-package com.nightsparrow.movietime.data;
+package com.miroslavmaric.movietime.data;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.nightsparrow.movietime.data.MovieContract.MovieEntry;
-import com.nightsparrow.movietime.data.MovieContract.VideoEntry;
+import com.miroslavmaric.movietime.data.MovieContract.MovieEntry;
+import com.miroslavmaric.movietime.data.MovieContract.VideoEntry;
 
 /**
  * Created by Miroslav Maric on 2/11/2016.
@@ -64,7 +64,7 @@ public class MovieDbHelper extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
         // This database is only a cache for online data, so its upgrade policy is
         // to simply to discard the data and start over
-        // Note that this only fires if you change the version number for database.
+        // This only fires if you change the version number for database.
         // It does NOT depend on the version number for the application.
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + MovieEntry.TABLE_NAME);
         sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + VideoEntry.TABLE_NAME);

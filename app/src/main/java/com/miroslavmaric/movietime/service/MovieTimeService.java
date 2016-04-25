@@ -1,4 +1,4 @@
-package com.nightsparrow.movietime.service;
+package com.miroslavmaric.movietime.service;
 
 import android.app.IntentService;
 import android.content.ContentValues;
@@ -6,8 +6,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 
-import com.nightsparrow.movietime.BuildConfig;
-import com.nightsparrow.movietime.data.MovieContract;
+import com.miroslavmaric.movietime.BuildConfig;
+import com.miroslavmaric.movietime.data.MovieContract;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -275,7 +275,7 @@ public class MovieTimeService extends IntentService {
             StringBuffer buffer = new StringBuffer();
             String line;
             while ((line = reader.readLine()) != null) {
-                // Convert to mere human friendly format
+                // Convert to more human friendly format
                 buffer.append(line + "\n");
             }
 

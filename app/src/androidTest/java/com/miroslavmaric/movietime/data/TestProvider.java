@@ -1,4 +1,4 @@
-package com.nightsparrow.movietime.data;
+package com.miroslavmaric.movietime.data;
 
 import android.content.ComponentName;
 import android.content.ContentUris;
@@ -11,8 +11,8 @@ import android.net.Uri;
 import android.test.AndroidTestCase;
 import android.util.Log;
 
-import com.nightsparrow.movietime.data.MovieContract.MovieEntry;
-import com.nightsparrow.movietime.data.MovieContract.VideoEntry;
+import com.miroslavmaric.movietime.data.MovieContract.MovieEntry;
+import com.miroslavmaric.movietime.data.MovieContract.VideoEntry;
 
 /**
  * Created by Miroslav Maric on 2/11/2016.

@@ -1,4 +1,4 @@
-package com.nightsparrow.movietime;
+package com.miroslavmaric.movietime;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -20,8 +20,8 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ListView;
 
-import com.nightsparrow.movietime.data.MovieContract;
-import com.nightsparrow.movietime.service.MovieTimeService;
+import com.miroslavmaric.movietime.data.MovieContract;
+import com.miroslavmaric.movietime.service.MovieTimeService;
 
 /**
  * A placeholder fragment containing a simple view.
