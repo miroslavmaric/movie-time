@@ -2,7 +2,7 @@
 Movie Time is an Android application which keeps the user up to date with the latest
 popular movies.
 
-A debug version of the is available here the root of the master branch as app-debug.apk. [Read more words!](app-debug.apk).
+A debug version of the app is available here: [app-debug.apk](app-debug.apk).
 
 It is intended for demonstration of Android application fundamentals.
 It includes: Activities, Fragments, Service, Content Prvoider, SQLite, Adapters, Loaders, REST Api interaction,
