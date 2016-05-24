@@ -2,11 +2,11 @@
 Movie Time is an Android application which keeps the user up to date with the latest
 popular movies.
 
-A debug version of the is available here: (app-debug.apk)
+A debug version of the is available here the root of the master branch as app-debug.apk. [Read more words!](app-debug.apk).
 
 It is intended for demonstration of Android application fundamentals.
 It includes: Activities, Fragments, Service, Content Prvoider, SQLite, Adapters, Loaders, REST Api interaction,
-  JSON parsing, Screen rotation and support for multiple screen sizes
+  JSON parsing, Screen rotation and support for multiple screen sizes.
 
 Note: For proper application running, a valid The Movie Database API key is required: https://www.themoviedb.org/faq/api
 It should be configured in the build.gradle file in the app direcory. 
